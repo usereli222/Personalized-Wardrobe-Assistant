@@ -1,0 +1,52 @@
+{
+  "seasonal_analysis": {
+    "warm_spring": {
+      "description": "Warm undertone, light to medium depth, high clarity",
+      "best_colors": ["coral", "peach", "warm green", "golden yellow", "camel", "warm red", "turquoise"],
+      "avoid_colors": ["black", "cool gray", "burgundy", "dark navy"],
+      "metals": ["gold", "rose gold"]
+    },
+    "cool_summer": {
+      "description": "Cool undertone, light to medium depth, muted/soft",
+      "best_colors": ["lavender", "soft blue", "dusty rose", "mauve", "sage", "slate blue", "soft teal"],
+      "avoid_colors": ["orange", "bright yellow", "black", "warm brown"],
+      "metals": ["silver", "platinum"]
+    },
+    "warm_autumn": {
+      "description": "Warm undertone, medium to deep depth, muted/rich",
+      "best_colors": ["rust", "olive", "mustard", "burnt orange", "forest green", "deep red", "camel"],
+      "avoid_colors": ["pastel pink", "icy blue", "bright white", "fuchsia"],
+      "metals": ["gold", "bronze", "copper"]
+    },
+    "cool_winter": {
+      "description": "Cool undertone, deep or very light depth, high contrast/clarity",
+      "best_colors": ["royal blue", "magenta", "true red", "emerald", "black", "white", "deep purple"],
+      "avoid_colors": ["muted earth tones", "warm beige", "dusty colors", "orange"],
+      "metals": ["silver", "platinum", "white gold"]
+    }
+  },
+  "color_harmonies": {
+    "complementary": "Colors opposite on the color wheel (e.g. blue + orange)",
+    "analogous": "Colors adjacent on the color wheel (e.g. blue + blue-green + green)",
+    "triadic": "Three colors evenly spaced on the wheel (e.g. red + yellow + blue)",
+    "split_complementary": "A color + two colors adjacent to its complement"
+  },
+  "lighting_effects": {
+    "overcast": {
+      "description": "Diffused light, colors appear muted",
+      "recommendation": "Choose more saturated colors to compensate"
+    },
+    "bright_sun": {
+      "description": "Direct light, colors appear washed out or overly vivid",
+      "recommendation": "Choose softer, less saturated colors"
+    },
+    "golden_hour": {
+      "description": "Warm, golden light near sunrise/sunset",
+      "recommendation": "Warm tones look especially good; cool tones may shift"
+    },
+    "indoor_artificial": {
+      "description": "Varies by light source (warm incandescent vs cool fluorescent)",
+      "recommendation": "Neutral palette works across most indoor lighting"
+    }
+  }
+}

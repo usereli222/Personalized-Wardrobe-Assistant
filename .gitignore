@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+
+# Node
+node_modules/
+frontend/build/
+frontend/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment
+.env
+*.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# ML
+ml/notebooks/.ipynb_checkpoints/
+*.h5
+*.pkl
+*.joblib
