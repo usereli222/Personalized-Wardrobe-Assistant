@@ -39,3 +39,13 @@ ml/notebooks/.ipynb_checkpoints/
 *.h5
 *.pkl
 *.joblib
+
+# Training pipeline
+training/data/deepfashion2_raw/
+training/data/deepfashion2_yolo*/
+training/data/visualizations/
+training/runs/
+runs/
+training/venv/
+*.pt
+*.onnx
