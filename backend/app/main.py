@@ -4,11 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.core.config import settings
-from app.core.database import engine, Base
 from app.routers import users, wardrobe, recommendations
-
-# Create tables
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Wardrobe AI",

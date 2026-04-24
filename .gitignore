@@ -49,3 +49,7 @@ runs/
 training/venv/
 *.pt
 *.onnx
+
+# Firebase
+*firebase*.json
+serviceAccountKey*.json

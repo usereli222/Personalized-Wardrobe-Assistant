@@ -7,15 +7,6 @@ class HSLColor(BaseModel):
     l: float  # 0-100
 
 
-class UserCreate(BaseModel):
-    name: str
-    skin_tone: HSLColor | None = None
-    season: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    location_name: str | None = None
-
-
 class UserUpdate(BaseModel):
     name: str | None = None
     skin_tone: HSLColor | None = None
@@ -27,7 +18,8 @@ class UserUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    name: str
+    email: str
+    name: str | None = None
     skin_tone: HSLColor | None = None
     season: str | None = None
     latitude: float | None = None
@@ -43,6 +35,7 @@ class UserResponse(BaseModel):
             skin_tone = HSLColor(h=user.skin_tone_hue, s=user.skin_tone_saturation, l=user.skin_tone_lightness)
         return cls(
             id=user.id,
+            email=user.email,
             name=user.name,
             skin_tone=skin_tone,
             season=user.season,
