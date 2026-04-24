@@ -10,10 +10,6 @@ class HSLColor(BaseModel):
 class UserUpdate(BaseModel):
     name: str | None = None
     skin_tone: HSLColor | None = None
-    season: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    location_name: str | None = None
 
 
 class UserResponse(BaseModel):
@@ -21,10 +17,6 @@ class UserResponse(BaseModel):
     email: str
     name: str | None = None
     skin_tone: HSLColor | None = None
-    season: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    location_name: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -38,8 +30,4 @@ class UserResponse(BaseModel):
             email=user.email,
             name=user.name,
             skin_tone=skin_tone,
-            season=user.season,
-            latitude=user.latitude,
-            longitude=user.longitude,
-            location_name=user.location_name,
         )

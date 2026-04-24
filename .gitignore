@@ -53,3 +53,6 @@ training/venv/
 # Firebase
 *firebase*.json
 serviceAccountKey*.json
+
+# My files
+explanation.md

@@ -5,29 +5,32 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from PIL import Image
 
+from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.models.user import User
 from app.models.wardrobe import WardrobeItem
 from app.schemas.wardrobe import WardrobeItemResponse
 from app.services.color_extraction import extract_dominant_colors
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
 
+VALID_CATEGORIES = {"top", "bottom", "shoes", "accessory", "outerwear"}
+
 
 @router.post("/items", response_model=WardrobeItemResponse)
 async def upload_item(
-    user_id: int = Form(...),
     category: str = Form(...),
-    name: str = Form(None),
+    name: str | None = Form(None),
+    subcategory: str | None = Form(None),
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """Upload a clothing item image and extract its dominant colors."""
-    valid_categories = {"top", "bottom", "shoes", "accessory", "outerwear"}
-    if category not in valid_categories:
-        raise HTTPException(status_code=400, detail=f"Category must be one of: {valid_categories}")
+    """Upload a single clothing item image and extract its dominant colors."""
+    if category not in VALID_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"Category must be one of: {sorted(VALID_CATEGORIES)}")
 
-    # Save image
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
     ext = Path(image.filename).suffix or ".png"
@@ -38,18 +41,18 @@ async def upload_item(
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    # Extract colors
     img = Image.open(file_path)
     dominant_colors = extract_dominant_colors(img, n_colors=3)
 
-    # Save to DB
     item = WardrobeItem(
-        user_id=user_id,
+        user_id=current_user.id,
         name=name,
         category=category,
+        subcategory=subcategory,
         image_path=str(filename),
         dominant_colors=dominant_colors,
         secondary_colors=dominant_colors[1:] if len(dominant_colors) > 1 else [],
+        source="uploaded",
     )
     db.add(item)
     db.commit()
@@ -58,29 +61,41 @@ async def upload_item(
 
 
 @router.get("/items", response_model=list[WardrobeItemResponse])
-def list_items(user_id: int, db: Session = Depends(get_db)):
-    """List all wardrobe items for a user."""
-    items = db.query(WardrobeItem).filter(WardrobeItem.user_id == user_id).all()
-    return items
+def list_items(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return db.query(WardrobeItem).filter(WardrobeItem.user_id == current_user.id).all()
 
 
 @router.get("/items/{item_id}", response_model=WardrobeItemResponse)
-def get_item(item_id: int, db: Session = Depends(get_db)):
-    """Get a specific wardrobe item."""
-    item = db.query(WardrobeItem).filter(WardrobeItem.id == item_id).first()
+def get_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = db.query(WardrobeItem).filter(
+        WardrobeItem.id == item_id,
+        WardrobeItem.user_id == current_user.id,
+    ).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
 
 
 @router.delete("/items/{item_id}")
-def delete_item(item_id: int, db: Session = Depends(get_db)):
-    """Delete a wardrobe item."""
-    item = db.query(WardrobeItem).filter(WardrobeItem.id == item_id).first()
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = db.query(WardrobeItem).filter(
+        WardrobeItem.id == item_id,
+        WardrobeItem.user_id == current_user.id,
+    ).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # Delete image file
     file_path = Path(settings.UPLOAD_DIR) / item.image_path
     if file_path.exists():
         file_path.unlink()

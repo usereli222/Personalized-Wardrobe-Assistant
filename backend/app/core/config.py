@@ -4,7 +4,6 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+psycopg2://wardrobe:wardrobe@localhost:5432/wardrobe"
-    OPENWEATHERMAP_API_KEY: str = ""
     UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent.parent.parent / "uploads")
     FIREBASE_CREDENTIALS_PATH: str = ""
 

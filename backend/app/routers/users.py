@@ -26,14 +26,6 @@ def update_me(
         current_user.skin_tone_hue = user_in.skin_tone.h
         current_user.skin_tone_saturation = user_in.skin_tone.s
         current_user.skin_tone_lightness = user_in.skin_tone.l
-    if user_in.season is not None:
-        current_user.season = user_in.season
-    if user_in.latitude is not None:
-        current_user.latitude = user_in.latitude
-    if user_in.longitude is not None:
-        current_user.longitude = user_in.longitude
-    if user_in.location_name is not None:
-        current_user.location_name = user_in.location_name
 
     db.commit()
     db.refresh(current_user)

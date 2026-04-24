@@ -8,7 +8,7 @@ from app.routers import users, wardrobe, recommendations
 
 app = FastAPI(
     title="Wardrobe AI",
-    description="Personalized wardrobe suggestions based on skin tone, weather, and color theory",
+    description="Outfit recommendations based on scraped style trends matched to your wardrobe",
     version="0.1.0",
 )
 
