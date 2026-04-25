@@ -1,14 +1,17 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON
-from app.core.database import Base
+def item_to_dict(user_id: str, name, category, image_path, dominant_colors, secondary_colors) -> dict:
+    """Convert wardrobe item fields to a Firestore-ready dict."""
+    return {
+        "user_id": user_id,
+        "name": name,
+        "category": category,
+        "image_path": image_path,
+        "dominant_colors": dominant_colors,
+        "secondary_colors": secondary_colors,
+    }
 
 
-class WardrobeItem(Base):
-    __tablename__ = "wardrobe_items"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    name = Column(String, nullable=True)
-    category = Column(String, nullable=False)  # top, bottom, shoes, accessory, outerwear
-    image_path = Column(String, nullable=False)
-    dominant_colors = Column(JSON, nullable=True)  # list of {h, s, l} dicts
-    secondary_colors = Column(JSON, nullable=True)
+def doc_to_item(doc) -> dict:
+    """Convert a Firestore DocumentSnapshot to a dict with 'id' included."""
+    data = doc.to_dict()
+    data["id"] = doc.id
+    return data

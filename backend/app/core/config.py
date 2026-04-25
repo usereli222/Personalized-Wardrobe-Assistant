@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite:///./wardrobe.db"
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = "./firebase-service-account.json"
     OPENWEATHERMAP_API_KEY: str = ""
     UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent.parent.parent / "uploads")
 

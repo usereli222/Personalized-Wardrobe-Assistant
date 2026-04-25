@@ -26,6 +26,9 @@ frontend/.env.local
 .env
 *.env.local
 
+# Firebase
+firebase-service-account.json
+
 # Database
 *.db
 *.sqlite3

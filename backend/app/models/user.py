@@ -1,16 +1,20 @@
-from sqlalchemy import Column, Integer, String, Float
-from app.core.database import Base
+def user_to_dict(user_in) -> dict:
+    """Convert a UserCreate schema to a Firestore-ready dict."""
+    return {
+        "username": user_in.username,
+        "name": user_in.name,
+        "skin_tone_hue": user_in.skin_tone.h if user_in.skin_tone else None,
+        "skin_tone_saturation": user_in.skin_tone.s if user_in.skin_tone else None,
+        "skin_tone_lightness": user_in.skin_tone.l if user_in.skin_tone else None,
+        "season": user_in.season,
+        "latitude": user_in.latitude,
+        "longitude": user_in.longitude,
+        "location_name": user_in.location_name,
+    }
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    skin_tone_hue = Column(Float, nullable=True)
-    skin_tone_saturation = Column(Float, nullable=True)
-    skin_tone_lightness = Column(Float, nullable=True)
-    season = Column(String, nullable=True)  # warm_spring, cool_summer, warm_autumn, cool_winter
-    latitude = Column(Float, nullable=True)
-    longitude = Column(Float, nullable=True)
-    location_name = Column(String, nullable=True)
+def doc_to_user(doc) -> dict:
+    """Convert a Firestore DocumentSnapshot to a dict with 'id' included."""
+    data = doc.to_dict()
+    data["id"] = doc.id
+    return data

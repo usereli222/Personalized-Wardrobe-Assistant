@@ -8,15 +8,13 @@ class HSLColor(BaseModel):
 
 
 class WardrobeItemResponse(BaseModel):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     name: str | None
     category: str
     image_path: str
     dominant_colors: list[dict] | None
     secondary_colors: list[dict] | None
-
-    model_config = {"from_attributes": True}
 
 
 class OutfitRecommendation(BaseModel):

@@ -7,9 +7,7 @@ Uses Delta E (CIE76) in CIELAB color space for human-perceptual color matching.
 import colorsys
 import math
 
-from sqlalchemy.orm import Session
-
-from app.models.wardrobe import WardrobeItem
+from app.models.wardrobe import doc_to_item
 
 
 def hsl_to_lab(h: float, s: float, l: float) -> tuple[float, float, float]:
@@ -48,18 +46,18 @@ def delta_e(color1: dict, color2: dict) -> float:
     return math.sqrt(sum((a - b) ** 2 for a, b in zip(lab1, lab2)))
 
 
-def score_item(item: WardrobeItem, recommended_colors: list[dict]) -> float:
+def score_item(item: dict, recommended_colors: list[dict]) -> float:
     """
     Score a wardrobe item against recommended colors.
 
     Lower score = better match. Uses the minimum Delta E between
     the item's dominant colors and any recommended color.
     """
-    if not item.dominant_colors:
+    if not item.get("dominant_colors"):
         return float("inf")
 
     min_distance = float("inf")
-    for item_color in item.dominant_colors:
+    for item_color in item["dominant_colors"]:
         for rec_color in recommended_colors:
             dist = delta_e(item_color, rec_color)
             min_distance = min(min_distance, dist)
@@ -68,8 +66,8 @@ def score_item(item: WardrobeItem, recommended_colors: list[dict]) -> float:
 
 
 def get_outfit_recommendation(
-    db: Session,
-    user_id: int,
+    db,
+    user_id: str,
     recommended_colors: list[dict],
     top_n: int = 3,
 ) -> dict[str, list]:
@@ -77,17 +75,18 @@ def get_outfit_recommendation(
     Match wardrobe items to recommended colors and return top matches per category.
 
     Returns:
-        Dict mapping category -> list of (item, score) tuples, sorted by score
+        Dict mapping category -> list of (item_dict, score) tuples, sorted by score
     """
-    items = db.query(WardrobeItem).filter(WardrobeItem.user_id == user_id).all()
+    docs = db.collection("wardrobe_items").where("user_id", "==", user_id).get()
+    items = [doc_to_item(doc) for doc in docs]
 
     # Group by category and score
     categories: dict[str, list] = {}
     for item in items:
         score = score_item(item, recommended_colors)
-        if item.category not in categories:
-            categories[item.category] = []
-        categories[item.category].append((item, score))
+        if item["category"] not in categories:
+            categories[item["category"]] = []
+        categories[item["category"]].append((item, score))
 
     # Sort each category by score and take top N
     result = {}

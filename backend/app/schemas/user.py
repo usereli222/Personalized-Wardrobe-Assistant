@@ -8,12 +8,17 @@ class HSLColor(BaseModel):
 
 
 class UserCreate(BaseModel):
+    username: str
     name: str
     skin_tone: HSLColor | None = None
     season: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     location_name: str | None = None
+
+
+class UserLogin(BaseModel):
+    username: str
 
 
 class UserUpdate(BaseModel):
@@ -26,7 +31,8 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int
+    id: str
+    username: str
     name: str
     skin_tone: HSLColor | None = None
     season: str | None = None
@@ -34,19 +40,22 @@ class UserResponse(BaseModel):
     longitude: float | None = None
     location_name: str | None = None
 
-    model_config = {"from_attributes": True}
-
     @classmethod
-    def from_db(cls, user):
+    def from_db(cls, data: dict):
         skin_tone = None
-        if user.skin_tone_hue is not None:
-            skin_tone = HSLColor(h=user.skin_tone_hue, s=user.skin_tone_saturation, l=user.skin_tone_lightness)
+        if data.get("skin_tone_hue") is not None:
+            skin_tone = HSLColor(
+                h=data["skin_tone_hue"],
+                s=data["skin_tone_saturation"],
+                l=data["skin_tone_lightness"],
+            )
         return cls(
-            id=user.id,
-            name=user.name,
+            id=data["id"],
+            username=data["username"],
+            name=data["name"],
             skin_tone=skin_tone,
-            season=user.season,
-            latitude=user.latitude,
-            longitude=user.longitude,
-            location_name=user.location_name,
+            season=data.get("season"),
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            location_name=data.get("location_name"),
         )
