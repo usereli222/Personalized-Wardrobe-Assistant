@@ -1,105 +1,205 @@
+"""
+Wardrobe routes — STUB persistence.
+
+Items live in `app/core/store.py` (in-memory) and uploaded image bytes go
+to `settings.UPLOAD_DIR` on disk. Mentees: swap to a real DB + a real
+file storage strategy (S3, local persistent volume, etc.).
+"""
+
+from __future__ import annotations
+
+import io
 import uuid
+import zipfile
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from PIL import Image
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from PIL import Image, UnidentifiedImageError
 
+from app.core import store
 from app.core.auth import get_current_user
 from app.core.config import settings
-from app.core.database import get_db
-from app.models.user import User
-from app.models.wardrobe import WardrobeItem
-from app.schemas.wardrobe import WardrobeItemResponse
+from app.services.categorizer import CATEGORIES, categorize_item
 from app.services.color_extraction import extract_dominant_colors
+
+
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
+
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
 
-VALID_CATEGORIES = {"top", "bottom", "shoes", "accessory", "outerwear"}
 
-
-@router.post("/items", response_model=WardrobeItemResponse)
-async def upload_item(
-    category: str = Form(...),
-    name: str | None = Form(None),
-    subcategory: str | None = Form(None),
-    image: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Upload a single clothing item image and extract its dominant colors."""
-    if category not in VALID_CATEGORIES:
-        raise HTTPException(status_code=400, detail=f"Category must be one of: {sorted(VALID_CATEGORIES)}")
-
+def _save_upload(image: UploadFile) -> tuple[Path, str]:
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
-    ext = Path(image.filename).suffix or ".png"
+    ext = Path(image.filename or "").suffix or ".png"
     filename = f"{uuid.uuid4()}{ext}"
-    file_path = upload_dir / filename
+    path = upload_dir / filename
+    path.write_bytes(image.file.read())
+    return path, filename
 
-    contents = await image.read()
-    with open(file_path, "wb") as f:
-        f.write(contents)
 
-    img = Image.open(file_path)
-    dominant_colors = extract_dominant_colors(img, n_colors=3)
+@router.post("/items")
+async def upload_item(
+    image: UploadFile = File(...),
+    name: str | None = Form(None),
+    category: str | None = Form(None),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Upload one clothing item. If `category` is omitted, the categorizer
+    stub is used. Mentees can wire the categorizer to a real model and
+    keep this route unchanged.
+    """
+    path, filename = _save_upload(image)
+    img = Image.open(path)
 
-    item = WardrobeItem(
-        user_id=current_user.id,
-        name=name,
-        category=category,
-        subcategory=subcategory,
-        image_path=str(filename),
-        dominant_colors=dominant_colors,
-        secondary_colors=dominant_colors[1:] if len(dominant_colors) > 1 else [],
-        source="uploaded",
+    if category is None:
+        predicted = categorize_item(img)
+        category = predicted["category"]
+        subcategory = predicted["subcategory"]
+    else:
+        if category not in CATEGORIES:
+            raise HTTPException(400, f"category must be one of {list(CATEGORIES)}")
+        subcategory = None
+
+    try:
+        dominant_colors = extract_dominant_colors(img, n_colors=3, remove_bg=False)
+    except Exception:
+        dominant_colors = []
+
+    item = store.add_wardrobe_item(
+        current_user["username"],
+        {
+            "name": name,
+            "category": category,
+            "subcategory": subcategory,
+            "image_path": filename,
+            "image_url": f"/uploads/{filename}",
+            "dominant_colors": dominant_colors,
+        },
     )
-    db.add(item)
-    db.commit()
-    db.refresh(item)
     return item
 
 
-@router.get("/items", response_model=list[WardrobeItemResponse])
-def list_items(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    return db.query(WardrobeItem).filter(WardrobeItem.user_id == current_user.id).all()
+@router.get("/items")
+def list_items(current_user: dict = Depends(get_current_user)):
+    return store.list_wardrobe_items(current_user["username"])
 
 
-@router.get("/items/{item_id}", response_model=WardrobeItemResponse)
-def get_item(
-    item_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    item = db.query(WardrobeItem).filter(
-        WardrobeItem.id == item_id,
-        WardrobeItem.user_id == current_user.id,
-    ).first()
+@router.get("/items/{item_id}")
+def get_item(item_id: str, current_user: dict = Depends(get_current_user)):
+    item = store.get_wardrobe_item(current_user["username"], item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(404, "Item not found")
     return item
 
 
 @router.delete("/items/{item_id}")
-def delete_item(
-    item_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    item = db.query(WardrobeItem).filter(
-        WardrobeItem.id == item_id,
-        WardrobeItem.user_id == current_user.id,
-    ).first()
+def delete_item(item_id: str, current_user: dict = Depends(get_current_user)):
+    item = store.get_wardrobe_item(current_user["username"], item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(404, "Item not found")
 
-    file_path = Path(settings.UPLOAD_DIR) / item.image_path
+    file_path = Path(settings.UPLOAD_DIR) / item["image_path"]
     if file_path.exists():
         file_path.unlink()
 
-    db.delete(item)
-    db.commit()
-    return {"detail": "Item deleted"}
+    store.delete_wardrobe_item(current_user["username"], item_id)
+    return {"detail": "deleted"}
+
+
+def _ingest_image_bytes(data: bytes, original_name: str, username: str) -> dict | None:
+    """Save bytes to disk, classify, and add to the wardrobe store. Returns
+    the new item, or None if the bytes couldn't be parsed as an image."""
+    try:
+        img = Image.open(io.BytesIO(data))
+        img.load()
+    except (UnidentifiedImageError, OSError):
+        return None
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    ext = Path(original_name).suffix.lower() if original_name else ""
+    if ext not in _IMAGE_EXTS:
+        ext = ".png"
+    filename = f"{uuid.uuid4()}{ext}"
+    (upload_dir / filename).write_bytes(data)
+
+    predicted = categorize_item(img.convert("RGB"))
+    try:
+        dominant_colors = extract_dominant_colors(img.convert("RGBA"), n_colors=3, remove_bg=False)
+    except Exception:
+        dominant_colors = []
+
+    return store.add_wardrobe_item(
+        username,
+        {
+            "name": Path(original_name).stem if original_name else None,
+            "category": predicted["category"],
+            "subcategory": predicted["subcategory"],
+            "image_path": filename,
+            "image_url": f"/uploads/{filename}",
+            "dominant_colors": dominant_colors,
+        },
+    )
+
+
+@router.post("/items/bulk")
+async def bulk_upload_items(
+    archive: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Upload a .zip of clothing images. Each entry is opened, classified
+    by the categorizer, and saved as a wardrobe item. Returns the list
+    of items created (skipping anything that wasn't a readable image).
+    """
+    raw = await archive.read()
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(raw))
+    except zipfile.BadZipFile:
+        raise HTTPException(400, "Not a valid zip archive")
+
+    created: list[dict] = []
+    skipped: list[str] = []
+    for info in zf.infolist():
+        if info.is_dir():
+            continue
+        # Skip macOS resource forks and dotfiles
+        name = info.filename
+        if name.startswith("__MACOSX/") or Path(name).name.startswith("."):
+            continue
+        if Path(name).suffix.lower() not in _IMAGE_EXTS:
+            skipped.append(name)
+            continue
+        try:
+            data = zf.read(info)
+        except Exception:
+            skipped.append(name)
+            continue
+        item = _ingest_image_bytes(data, Path(name).name, current_user["username"])
+        if item is None:
+            skipped.append(name)
+        else:
+            created.append(item)
+
+    return {"created": created, "skipped": skipped}
+
+
+@router.post("/body-photo")
+async def upload_body_photo(
+    image: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    _, filename = _save_upload(image)
+    store.set_body_photo(current_user["username"], filename)
+    return {"body_photo_url": f"/uploads/{filename}"}
+
+
+@router.get("/body-photo")
+def get_body_photo(current_user: dict = Depends(get_current_user)):
+    path = current_user.get("body_photo_path")
+    if not path:
+        raise HTTPException(404, "No body photo uploaded yet")
+    return {"body_photo_url": f"/uploads/{path}"}
