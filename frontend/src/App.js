@@ -1,45 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import Onboarding from './pages/Onboarding';
-import Wardrobe from './pages/Wardrobe';
-import Recommendation from './pages/Recommendation';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Door from './pages/Door';
+import Login from './pages/Login';
+import WardrobeMain from './pages/WardrobeMain';
+import EditWardrobe from './pages/EditWardrobe';
+
+const USERNAME_KEY = 'wardrobeUsername';
 
 function App() {
-  const [userId, setUserId] = useState(() => {
-    return localStorage.getItem('wardrobeUserId') || null;
-  });
+  const [username, setUsername] = useState(() => localStorage.getItem(USERNAME_KEY));
 
   useEffect(() => {
-    if (userId) {
-      localStorage.setItem('wardrobeUserId', userId);
+    if (username) {
+      localStorage.setItem(USERNAME_KEY, username);
+    } else {
+      localStorage.removeItem(USERNAME_KEY);
     }
-  }, [userId]);
+  }, [username]);
 
-  if (!userId) {
-    return (
-      <div className="app">
-        <Onboarding onComplete={(id) => setUserId(id)} />
-      </div>
-    );
-  }
+  const handleLogout = () => setUsername(null);
+
+  const requireAuth = (element) =>
+    username ? element : <Navigate to="/login" replace />;
 
   return (
     <div className="app">
-      <nav>
-        <NavLink to="/recommend" className={({ isActive }) => isActive ? 'active' : ''}>
-          Today's Outfit
-        </NavLink>
-        <NavLink to="/wardrobe" className={({ isActive }) => isActive ? 'active' : ''}>
-          My Wardrobe
-        </NavLink>
-        <button className="btn-secondary" onClick={() => { localStorage.removeItem('wardrobeUserId'); setUserId(null); }}>
-          Reset Profile
-        </button>
-      </nav>
       <Routes>
-        <Route path="/recommend" element={<Recommendation userId={userId} />} />
-        <Route path="/wardrobe" element={<Wardrobe userId={userId} />} />
-        <Route path="*" element={<Navigate to="/recommend" replace />} />
+        <Route path="/" element={<Door />} />
+        <Route path="/login" element={<Login onLogin={(u) => setUsername(u)} />} />
+        <Route
+          path="/wardrobe"
+          element={requireAuth(
+            <WardrobeMain username={username} onLogout={handleLogout} />
+          )}
+        />
+        <Route
+          path="/wardrobe/edit"
+          element={requireAuth(<EditWardrobe username={username} />)}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
