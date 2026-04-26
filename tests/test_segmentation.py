@@ -77,7 +77,7 @@ def main():
     if args.images:
         image_paths = [Path(p) for p in args.images]
     else:
-        test_images_dir = project_root / "training" / "test_images"
+        test_images_dir = project_root / "tests" / "sample_images"
         if not test_images_dir.exists():
             print(f"Test images directory not found: {test_images_dir}")
             print("Use --images to specify image paths.")
