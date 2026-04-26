@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_PATH: str = ""
     GEMINI_API_KEY: str = ""
     GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-image"
+    GEMINI_VISION_MODEL: str = "gemini-2.5-flash"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

@@ -807,3 +807,555 @@ a {
     font-size: 36px;
   }
 }
+
+/* ============================================================
+   App shell (header + nav) — used on all post-login pages
+   ============================================================ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(20, 12, 38, 0.85), rgba(13, 9, 24, 0.6));
+  backdrop-filter: blur(8px);
+  flex: 0 0 auto;
+}
+
+.app-brand {
+  font-size: 22px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+
+.app-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-tab:hover {
+  color: var(--gold-soft);
+}
+
+.nav-tab.active {
+  background: rgba(255, 210, 154, 0.1);
+  color: var(--gold-soft);
+  border: 1px solid var(--line-strong);
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-user {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ============================================================
+   Generic page wrapper (Wardrobe, Outfits, Onboarding)
+   ============================================================ */
+
+.page {
+  padding: 32px 40px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-error {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 107, 129, 0.5);
+  border-radius: 8px;
+  color: var(--danger);
+  background: rgba(255, 107, 129, 0.08);
+}
+
+.muted { color: var(--text-faint); }
+.muted.small { font-size: 13px; }
+
+/* ============================================================
+   Login link inline (for Signup ↔ Login)
+   ============================================================ */
+
+.login-footer {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.login-link {
+  color: var(--gold-soft);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Onboarding
+   ============================================================ */
+
+.onboarding-page {
+  padding: 32px 40px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.onboarding-intro {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.onboarding-intro h1 {
+  font-size: 40px;
+  letter-spacing: 0.04em;
+  color: var(--gold-soft);
+}
+
+.onboarding-intro p {
+  margin-top: 8px;
+  color: var(--text-dim);
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+@media (max-width: 900px) {
+  .onboarding-grid { grid-template-columns: 1fr; }
+}
+
+.onboard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.onboard-summary {
+  margin-top: 8px;
+}
+
+.onboard-count {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.onboard-error {
+  margin: 16px auto 0;
+  max-width: 600px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 107, 129, 0.5);
+  border-radius: 8px;
+  color: var(--danger);
+  background: rgba(255, 107, 129, 0.08);
+  text-align: center;
+}
+
+.onboard-footer {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.body-preview.large {
+  width: 100%;
+  height: 280px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.body-preview.large img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.body-preview-empty {
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.mini-tile {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.mini-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.closet-grid.small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primary-btn.large {
+  font-size: 16px;
+  padding: 14px 32px;
+}
+
+.primary-btn.small {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+/* ============================================================
+   Wardrobe page (categorized sections)
+   ============================================================ */
+
+.wardrobe-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.wardrobe-section .panel-title {
+  margin-bottom: 12px;
+}
+
+/* ============================================================
+   Outfits page
+   ============================================================ */
+
+.outfits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.outfit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.outfit-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.outfit-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: rgba(0,0,0,0.25);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.outfit-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.outfit-thumb-label {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  padding: 3px 8px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+
+.outfit-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.outfit-score {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ============================================================
+   Try-On page — single viewport, NO page scroll.
+   Only the closet panels scroll internally.
+   ============================================================ */
+
+.tryon-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px 20px 12px;
+  gap: 10px;
+}
+
+.tryon-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(360px, 2.4fr) minmax(180px, 1fr);
+  gap: 16px;
+}
+
+.tryon-page .closet-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  gap: 8px;
+}
+
+.tryon-page .closet-panel .closet-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.tryon-page .closet-tile {
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.25);
+  padding: 0;
+}
+
+.tryon-page .closet-tile.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(255, 210, 154, 0.25);
+}
+
+.tryon-page .closet-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tryon-page .mannequin-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  min-height: 0;
+}
+
+.tryon-page .magic-mirror {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tryon-page .mirror-frame {
+  position: relative;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 3 / 4;
+  max-width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(154, 92, 255, 0.08), rgba(255, 210, 154, 0.04));
+}
+
+.tryon-page .mirror-surface {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tryon-page .mirror-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.tryon-page .mirror-image.faded { opacity: 0.4; }
+.tryon-page .mirror-image.idle { opacity: 0.95; }
+
+.tryon-page .mirror-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tryon-page .mirror-rune {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-soft);
+  border-top-color: transparent;
+  animation: spin 1.4s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tryon-page .mirror-loading-text {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--gold-soft);
+}
+
+.tryon-page .mirror-empty {
+  text-align: center;
+  padding: 24px;
+}
+
+.tryon-page .mirror-empty-glyph {
+  font-size: 32px;
+  color: var(--gold-soft);
+  margin-bottom: 8px;
+}
+
+.tryon-page .mirror-empty-text {
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.tryon-page .mannequin-caption {
+  text-align: center;
+  padding-top: 8px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+.tryon-page .mannequin-caption .dot { margin: 0 8px; color: var(--text-faint); }
+
+.tryon-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.footer-hint {
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.demo-button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  color: var(--gold-soft);
+  background: rgba(255, 210, 154, 0.06);
+}
+
+.demo-button:hover:not(:disabled) {
+  background: rgba(255, 210, 154, 0.12);
+}

@@ -52,3 +52,10 @@ serviceAccountKey*.json
 # My files
 explanation.md
 polyvore/
+
+# Local demo assets (personal photos, sample wardrobe zips)
+/danielfullbody.png
+/dx-fullbody.png
+/dx-clothes.zip
+/DSC*.png
+/DSC*.jpg

@@ -1,16 +1,21 @@
-import { dataUrlToBlob } from './wardrobeStore';
+import { api, fileUrl } from './api';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+// Fetches an image from the backend (e.g. /uploads/foo.png) and returns a Blob.
+async function urlToBlob(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not load image at ${url}`);
+  return res.blob();
+}
 
-export async function generateTryOn({ bodyDataUrl, topDataUrl, bottomDataUrl, extraInstructions }) {
-  if (!bodyDataUrl) throw new Error('Upload a full-body photo first.');
-  if (!topDataUrl) throw new Error('Pick a top.');
-  if (!bottomDataUrl) throw new Error('Pick a bottom.');
+export async function generateTryOn({ bodyPhotoUrl, topImageUrl, bottomImageUrl, extraInstructions }) {
+  if (!bodyPhotoUrl) throw new Error('Upload a full-body photo first.');
+  if (!topImageUrl) throw new Error('Pick a top.');
+  if (!bottomImageUrl) throw new Error('Pick a bottom.');
 
   const [body, top, bottom] = await Promise.all([
-    dataUrlToBlob(bodyDataUrl),
-    dataUrlToBlob(topDataUrl),
-    dataUrlToBlob(bottomDataUrl),
+    urlToBlob(fileUrl(bodyPhotoUrl)),
+    urlToBlob(fileUrl(topImageUrl)),
+    urlToBlob(fileUrl(bottomImageUrl)),
   ]);
 
   const form = new FormData();
@@ -19,22 +24,6 @@ export async function generateTryOn({ bodyDataUrl, topDataUrl, bottomDataUrl, ex
   form.append('bottom', bottom, 'bottom.png');
   if (extraInstructions) form.append('extra_instructions', extraInstructions);
 
-  const res = await fetch(`${API_BASE}/tryon/generate`, {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      if (body?.detail) detail = body.detail;
-    } catch {
-      // body wasn't JSON
-    }
-    throw new Error(detail);
-  }
-
-  const blob = await res.blob();
+  const blob = await api.postFormBlob('/tryon/generate', form);
   return URL.createObjectURL(blob);
 }

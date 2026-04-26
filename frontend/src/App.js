@@ -1,43 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Door from './pages/Door';
 import Login from './pages/Login';
-import WardrobeMain from './pages/WardrobeMain';
-import EditWardrobe from './pages/EditWardrobe';
+import Signup from './pages/Signup';
+import Onboarding from './pages/Onboarding';
+import Wardrobe from './pages/Wardrobe';
+import Outfits from './pages/Outfits';
+import TryOn from './pages/TryOn';
+import AppShell, { RequireAuth } from './components/AppShell';
 
 const USERNAME_KEY = 'wardrobeUsername';
 
 function App() {
   const [username, setUsername] = useState(() => localStorage.getItem(USERNAME_KEY));
 
-  useEffect(() => {
-    if (username) {
-      localStorage.setItem(USERNAME_KEY, username);
-    } else {
-      localStorage.removeItem(USERNAME_KEY);
-    }
-  }, [username]);
-
-  const handleLogout = () => setUsername(null);
-
-  const requireAuth = (element) =>
-    username ? element : <Navigate to="/login" replace />;
+  const handleAuthed = (u) => {
+    setUsername(u);
+    localStorage.setItem(USERNAME_KEY, u);
+  };
 
   return (
     <div className="app">
       <Routes>
         <Route path="/" element={<Door />} />
-        <Route path="/login" element={<Login onLogin={(u) => setUsername(u)} />} />
-        <Route
-          path="/wardrobe"
-          element={requireAuth(
-            <WardrobeMain username={username} onLogout={handleLogout} />
-          )}
-        />
-        <Route
-          path="/wardrobe/edit"
-          element={requireAuth(<EditWardrobe username={username} />)}
-        />
+        <Route path="/login" element={<Login onAuthed={handleAuthed} />} />
+        <Route path="/signup" element={<Signup onAuthed={handleAuthed} />} />
+
+        <Route element={<RequireAuth><AppShell username={username} /></RequireAuth>}>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/wardrobe" element={<Wardrobe />} />
+          <Route path="/outfits" element={<Outfits />} />
+          <Route path="/tryon" element={<TryOn />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

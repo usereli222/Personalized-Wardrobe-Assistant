@@ -1,20 +1,19 @@
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.1
-sqlalchemy>=2.0.31
-alembic>=1.13.1
-psycopg2-binary>=2.9.9
-firebase-admin>=6.5.0
 python-multipart>=0.0.9
-pillow>=11.0.0
-scikit-learn>=1.5.0
-numpy>=2.0.0
-rembg>=2.0.57
-onnxruntime>=1.18.0
-colormath>=3.0.0
-httpx>=0.27.0
-python-dotenv>=1.0.1
 pydantic>=2.7.4
 pydantic-settings>=2.3.4
+pydantic[email]>=2.7.4
+pillow>=11.0.0
+numpy>=2.0.0
+scikit-learn>=1.5.0
 google-genai>=0.7.0
+python-dotenv>=1.0.1
 pytest>=8.2.2
 pytest-asyncio>=0.23.7
+
+# Mentees: add what you need below for your implementation, e.g.
+#   sqlalchemy + alembic + psycopg2-binary (or aiosqlite) for the DB
+#   passlib[bcrypt] + python-jose[cryptography] for real auth
+#   torch + transformers for FashionCLIP
+#   rembg + onnxruntime for background removal in color extraction
