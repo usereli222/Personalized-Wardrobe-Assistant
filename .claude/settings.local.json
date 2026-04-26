@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import faiss; print\\('faiss version:', faiss.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/test_faiss.py -v)"
+    ]
+  }
+}
