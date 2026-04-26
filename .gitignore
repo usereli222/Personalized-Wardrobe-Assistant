@@ -9,6 +9,7 @@ build/
 venv/
 .venv/
 env/
+wardrobe_venv/
 
 # Node
 node_modules/
@@ -34,21 +35,15 @@ frontend/.env.local
 uploads/*
 !uploads/.gitkeep
 
-# ML
-ml/notebooks/.ipynb_checkpoints/
+# ML model weights
+*.pt
+*.onnx
 *.h5
 *.pkl
 *.joblib
 
-# Training pipeline
-training/data/deepfashion2_raw/
-training/data/deepfashion2_yolo*/
-training/data/visualizations/
-training/runs/
-runs/
-training/venv/
-*.pt
-*.onnx
+# Test outputs (generated images)
+tests/output/
 
 # Firebase
 *firebase*.json
