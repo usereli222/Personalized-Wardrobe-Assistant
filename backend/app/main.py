@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.core.config import settings
-from app.routers import users, wardrobe, recommendations
+from app.routers import users, wardrobe, recommendations, tryon
 
 app = FastAPI(
     title="Wardrobe AI",
@@ -30,6 +30,7 @@ app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
 app.include_router(users.router, prefix="/api")
 app.include_router(wardrobe.router, prefix="/api")
 app.include_router(recommendations.router, prefix="/api")
+app.include_router(tryon.router, prefix="/api")
 
 
 @app.get("/")

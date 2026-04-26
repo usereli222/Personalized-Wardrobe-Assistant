@@ -1,191 +1,809 @@
+/* ============================================================
+   Wardrobe AI — Mystical theme
+   ============================================================ */
+
+:root {
+  --bg-deep: #05030a;
+  --bg-dim: #0d0918;
+  --bg-mid: #161028;
+  --bg-card: rgba(28, 20, 50, 0.6);
+  --line: rgba(255, 215, 168, 0.18);
+  --line-strong: rgba(255, 215, 168, 0.4);
+  --gold: #ffd29a;
+  --gold-soft: #ffeac6;
+  --violet: #9a5cff;
+  --violet-soft: #c8a8ff;
+  --text: #f3ecff;
+  --text-dim: #b6a8d8;
+  --text-faint: #7d6fa3;
+  --danger: #ff6b81;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f7;
-  color: #1d1d1f;
-}
-
+html,
+body,
+#root,
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  height: 100%;
+  width: 100%;
 }
 
-/* Navigation */
-nav {
-  display: flex;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid #d2d2d7;
-  margin-bottom: 24px;
+body {
+  font-family: 'Cormorant Garamond', 'Garamond', 'Iowan Old Style', Georgia,
+    -apple-system, BlinkMacSystemFont, serif;
+  background: radial-gradient(ellipse at top, #1a0f2e 0%, var(--bg-deep) 65%);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-nav a {
-  text-decoration: none;
-  color: #1d1d1f;
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+/* ============================================================
+   Door scene
+   ============================================================ */
+
+.door-scene {
+  position: fixed;
+  inset: 0;
+  cursor: pointer;
+  background: radial-gradient(ellipse at center, #0e0820 0%, #04020a 80%);
+}
+
+.door-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.door-hint {
+  position: absolute;
+  bottom: 8%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  animation: floatIn 1.4s ease-out;
+}
+
+.door-title {
+  font-size: 56px;
   font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: background 0.2s;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  text-shadow: 0 0 24px rgba(255, 210, 154, 0.55), 0 0 60px rgba(154, 92, 255, 0.3);
 }
 
-nav a:hover,
-nav a.active {
-  background: #e8e8ed;
+.door-sub {
+  margin-top: 12px;
+  font-size: 18px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.85;
+  animation: pulseFade 2.6s ease-in-out infinite;
 }
 
-/* Page titles */
-h1 {
-  font-size: 28px;
-  font-weight: 700;
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseFade {
+  0%,
+  100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================
+   Login
+   ============================================================ */
+
+.login-scene {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #1a1030 0%, #06030f 70%);
+  overflow: hidden;
+}
+
+.login-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 210, 154, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(circle at 70% 80%, rgba(154, 92, 255, 0.22), transparent 45%);
+  filter: blur(40px);
+  pointer-events: none;
+  animation: glowDrift 12s ease-in-out infinite alternate;
+}
+
+@keyframes glowDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(30px, -20px); }
+}
+
+.login-card {
+  position: relative;
+  width: min(420px, 90vw);
+  padding: 48px 40px;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 20, 50, 0.85),
+    rgba(14, 10, 26, 0.85)
+  );
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(154, 92, 255, 0.15) inset;
+  backdrop-filter: blur(14px);
+  animation: floatIn 0.8s ease-out;
+}
+
+.login-emblem {
+  text-align: center;
+  font-size: 36px;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(255, 210, 154, 0.6);
+  margin-bottom: 8px;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 30px;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  color: var(--gold-soft);
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 28px;
+}
+
+.login-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 14px 0 6px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(8, 5, 16, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255, 210, 154, 0.12);
+}
+
+.login-input.narrow {
+  max-width: 360px;
+}
+
+.login-error {
+  margin-top: 14px;
+  color: var(--danger);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 28px;
+  padding: 14px;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #1a0f2a;
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  box-shadow: 0 6px 24px rgba(255, 210, 154, 0.25);
+}
+
+.login-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 32px rgba(255, 210, 154, 0.35);
+}
+
+/* ============================================================
+   Wardrobe main
+   ============================================================ */
+
+.wardrobe-main,
+.edit-wardrobe {
+  min-height: 100vh;
+  padding: 28px 36px 36px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wardrobe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
   margin-bottom: 20px;
 }
 
-h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 16px;
+.wardrobe-greeting {
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  color: var(--gold-soft);
 }
 
-/* Cards */
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  margin-bottom: 16px;
+.wardrobe-spark {
+  color: var(--gold);
+  margin-right: 6px;
+  text-shadow: 0 0 12px rgba(255, 210, 154, 0.7);
 }
 
-/* Buttons */
-button, .btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s;
+.wardrobe-header-actions {
+  display: flex;
+  gap: 12px;
 }
 
-button:hover {
-  opacity: 0.85;
-}
-
-.btn-primary {
-  background: #0071e3;
-  color: white;
-}
-
-.btn-danger {
-  background: #ff3b30;
-  color: white;
-}
-
-.btn-secondary {
-  background: #e8e8ed;
-  color: #1d1d1f;
-}
-
-/* Forms */
-input, select {
-  padding: 10px 14px;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
-  font-size: 14px;
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-label {
-  display: block;
+.ghost-btn {
+  padding: 10px 18px;
   font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 4px;
-  color: #6e6e73;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  background: rgba(28, 20, 50, 0.5);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  transition: all 0.18s ease;
 }
 
-/* Grid */
-.grid {
+.ghost-btn:hover {
+  background: rgba(255, 210, 154, 0.1);
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(255, 210, 154, 0.25);
+}
+
+.ghost-btn.subtle {
+  color: var(--text-dim);
+  border-color: var(--line);
+}
+
+.ghost-btn.danger {
+  color: var(--danger);
+  border-color: rgba(255, 107, 129, 0.35);
+  font-size: 11px;
+  padding: 6px 12px;
+  margin-top: 8px;
+}
+
+.ghost-btn.danger:hover {
+  background: rgba(255, 107, 129, 0.1);
+  border-color: var(--danger);
+  box-shadow: none;
+}
+
+/* Three-column stage: closet | mannequin | closet */
+.wardrobe-stage {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: 240px 1fr 240px;
+  gap: 20px;
+  min-height: 0;
+}
+
+.closet-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  backdrop-filter: blur(8px);
+}
+
+.panel-title {
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.closet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.closet-grid.wide {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 16px;
 }
 
-/* Color swatch */
-.color-swatch {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 6px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+.closet-tile {
+  position: relative;
+  aspect-ratio: 1;
+  background: rgba(8, 5, 16, 0.6);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.color-palette {
+.closet-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.closet-tile:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 210, 154, 0.2);
+}
+
+.closet-tile.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold), 0 0 24px rgba(255, 210, 154, 0.4);
+}
+
+.empty-hint {
+  font-size: 13px;
+  color: var(--text-faint);
+  font-style: italic;
+  line-height: 1.5;
+  padding: 8px 4px;
+}
+
+.empty-hint.big {
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 15px;
+}
+
+/* Mirror stage */
+.mannequin-stage {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(154, 92, 255, 0.14), transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(255, 210, 154, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(14, 8, 26, 0.6), rgba(6, 3, 12, 0.6));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  min-height: 540px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 56px;
+}
+
+.magic-mirror {
+  position: relative;
+  width: min(420px, 90%);
+  aspect-ratio: 3 / 4.4;
+}
+
+.mirror-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 18px 18px / 35% 35% 18px 18px;
+  padding: 14px;
+  background:
+    linear-gradient(160deg, rgba(255, 210, 154, 0.55), rgba(154, 92, 255, 0.35) 55%, rgba(255, 210, 154, 0.4)) border-box,
+    radial-gradient(ellipse at top, rgba(255, 210, 154, 0.2), transparent 70%) border-box;
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 154, 0.35),
+    0 30px 80px rgba(154, 92, 255, 0.25),
+    inset 0 0 60px rgba(154, 92, 255, 0.18);
+}
+
+.mirror-glow {
+  position: absolute;
+  inset: -22%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 210, 154, 0.22), transparent 55%);
+  filter: blur(20px);
+  pointer-events: none;
+  animation: mirrorPulse 5s ease-in-out infinite;
+}
+
+@keyframes mirrorPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.04); }
+}
+
+.mirror-surface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 14px 14px / 35% 35% 14px 14px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, #1a1030, #06030f 80%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mirror-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.mirror-image.idle {
+  filter: saturate(0.85) brightness(0.95);
+}
+
+.mirror-image.faded {
+  opacity: 0.35;
+  filter: blur(2px) saturate(1.2);
+}
+
+.mirror-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  pointer-events: none;
+}
+
+.mirror-rune {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 210, 154, 0.5);
+  border-top-color: var(--gold);
+  box-shadow: 0 0 30px rgba(255, 210, 154, 0.4),
+    inset 0 0 20px rgba(154, 92, 255, 0.4);
+  animation: runeSpin 1.6s linear infinite;
+}
+
+@keyframes runeSpin {
+  to { transform: rotate(360deg); }
+}
+
+.mirror-loading-text {
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  text-shadow: 0 0 14px rgba(255, 210, 154, 0.45);
+}
+
+.mirror-empty {
+  text-align: center;
+  padding: 24px 28px;
+  color: var(--text-dim);
+}
+
+.mirror-empty-glyph {
+  font-size: 56px;
+  color: var(--gold);
+  text-shadow: 0 0 28px rgba(255, 210, 154, 0.6);
+  margin-bottom: 16px;
+}
+
+.mirror-empty-text {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  font-style: italic;
+}
+
+.mirror-empty-text em {
+  color: var(--gold-soft);
+  font-style: normal;
+}
+
+.footer-hint {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.footer-hint em {
+  color: var(--gold-soft);
+  font-style: normal;
+}
+
+.mannequin-caption {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.mannequin-caption .dot {
+  margin: 0 10px;
+  color: var(--gold);
+}
+
+.mannequin-caption .muted {
+  color: var(--text-faint);
+  letter-spacing: 0.15em;
+  font-style: italic;
+  text-transform: none;
+  font-size: 14px;
+}
+
+/* Footer */
+.wardrobe-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.primary-btn {
+  padding: 14px 36px;
+  font-size: 13px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #1a0f2a;
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 0.18s ease;
+  box-shadow: 0 6px 24px rgba(255, 210, 154, 0.25);
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 32px rgba(255, 210, 154, 0.4);
+}
+
+.primary-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.submit-toast {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--gold-soft);
+  animation: floatIn 0.4s ease-out;
+}
+
+/* ============================================================
+   Edit wardrobe
+   ============================================================ */
+
+.upload-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+}
+
+.body-card {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 24px;
+  align-items: center;
+}
+
+.body-card-text {
+  min-width: 0;
+}
+
+.body-card-sub {
+  margin-top: 8px;
+  margin-bottom: 18px;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.body-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.upload-trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.body-preview {
+  width: 200px;
+  height: 260px;
+  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  overflow: hidden;
+  background: rgba(8, 5, 16, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.body-preview-empty {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+@media (max-width: 720px) {
+  .body-card {
+    grid-template-columns: 1fr;
+  }
+  .body-preview {
+    width: 100%;
+    height: 240px;
+  }
+}
+
+.upload-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0;
+  gap: 16px;
+  align-items: flex-end;
 }
 
-/* Wardrobe item card */
-.item-card {
-  background: white;
+.form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-input {
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: rgba(28, 20, 50, 0.5);
+  color: var(--gold-soft);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.file-input::file-selector-button:hover {
+  background: rgba(255, 210, 154, 0.12);
+  border-color: var(--gold);
+}
+
+.closet-section {
+  flex: 1;
+}
+
+.closet-card {
+  background: rgba(8, 5, 16, 0.55);
+  border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.15s, transform 0.15s;
 }
 
-.item-card img {
+.closet-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.closet-card img {
   width: 100%;
-  height: 200px;
+  aspect-ratio: 1;
   object-fit: cover;
+  display: block;
 }
 
-.item-card .item-info {
-  padding: 12px;
+.closet-card-info {
+  padding: 12px 14px 14px;
 }
 
-.item-card .item-category {
-  font-size: 12px;
-  color: #6e6e73;
+.closet-card-cat {
+  font-size: 10px;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--gold);
+  margin-bottom: 4px;
 }
 
-/* Upload area */
-.upload-area {
-  border: 2px dashed #d2d2d7;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
+.closet-card-name {
+  font-size: 16px;
+  color: var(--text);
 }
 
-.upload-area:hover {
-  border-color: #0071e3;
-}
+/* ============================================================
+   Responsive
+   ============================================================ */
 
-/* Outfit section */
-.outfit-section {
-  margin-bottom: 24px;
-}
-
-.outfit-section h3 {
-  text-transform: capitalize;
-  margin-bottom: 12px;
-  color: #6e6e73;
-}
-
-/* Loading */
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: #6e6e73;
+@media (max-width: 960px) {
+  .wardrobe-stage {
+    grid-template-columns: 1fr;
+  }
+  .closet-panel {
+    max-height: 220px;
+  }
+  .door-title {
+    font-size: 36px;
+  }
 }
