@@ -111,21 +111,26 @@ class WardrobeProcessor:
             
         return processed_items
 
-    def process_wardrobe_photo(self, image_path: Union[str, Path], prompt: Optional[str] = None) -> list[dict]:
+    def process_wardrobe_photo(self, image_input: Union[str, Path, Image.Image], prompt: Optional[str] = None) -> list[dict]:
         """
         Full end-to-end pipeline:
         Raw photo -> Grounded SAM (Segments) -> FashionCLIP & KMeans (Features)
+
+        Args:
+            image_input: File path or a PIL Image already in memory (e.g. downloaded
+                from Google Drive). ClothingSegmenter.segment() accepts both.
         """
-        # Lazy load segmenter to avoid loading heavy SAM into VRAM if this 
+        # Lazy load segmenter to avoid loading heavy SAM into VRAM if this
         # API is just being used for FAISS testing.
         if self.segmenter is None:
             from wardrobe.segmentation import ClothingSegmenter
             self.segmenter = ClothingSegmenter(device=self.embedder.device.type)
-            
-        logger.info(f"\nProcessing full wardrobe photo: {Path(image_path).name}")
-        
-        # 1. Segment
-        seg_results = self.segmenter.segment(image_path, prompt=prompt)
+
+        name = getattr(image_input, "filename", None) or (Path(image_input).name if not isinstance(image_input, Image.Image) else "pil_image")
+        logger.info(f"\nProcessing full wardrobe photo: {name}")
+
+        # 1. Segment — accepts str | Path | PIL Image
+        seg_results = self.segmenter.segment(image_input, prompt=prompt)
         
         if not seg_results:
             logger.warning("No clothing items found in photo.")

@@ -6,6 +6,10 @@ from pathlib import Path
 import faiss
 import numpy as np
 
+# FashionCLIP (patrickjohncyh/fashion-clip) produces 512-dim float32 embeddings
+# that are already L2-normalized by ClothingEmbedder.embed() before they arrive here.
+# The normalization steps below are therefore no-ops for pipeline inputs but act as
+# a safety guard if embeddings from other sources are ever passed in.
 EMBEDDING_DIM = 512
 CATEGORIES = ("top", "bottom", "outerwear", "shoes", "accessory")
 
