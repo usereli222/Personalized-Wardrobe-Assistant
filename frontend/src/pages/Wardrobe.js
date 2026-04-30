@@ -16,13 +16,68 @@ const SECTIONS = [
   { key: 'accessory', label: 'Accessories' },
 ];
 
-function SimilarModal({ source, results, loading, error, onClose }) {
+function SimilarModal({ source, results, loading, error, onClose, onTryOn }) {
   if (!source) return null;
+
+  // Result cards come from either the FAISS library (default) or the
+  // user's own wardrobe (fallback). Library cards show the SAM crop +
+  // a "View full outfit" link + a "Try this on" button.
+  const renderCard = (it, idx) => {
+    const key = it.library_item_id || it.id || idx;
+    const isLibrary = it.source === 'library';
+    const title = isLibrary
+      ? (it.label || it.category || 'Reference item')
+      : (it.name || it.subcategory || it.category || 'Wardrobe item');
+    const subtitle = isLibrary
+      ? `from ${it.outfit_id || 'corpus'}`
+      : (it.subcategory || it.category || '');
+    return (
+      <div key={key} className="closet-card">
+        {it.image_url ? (
+          <img src={fileUrl(it.image_url)} alt={title} />
+        ) : (
+          <div className="empty-hint small">no image</div>
+        )}
+        <div className="closet-card-info">
+          <div className="closet-card-cat">{title}</div>
+          <div className="closet-card-name muted small">{subtitle}</div>
+          <div className="muted small">
+            match {Math.round((it.similarity || 0) * 100)}%
+          </div>
+          {isLibrary && (
+            <div className="closet-card-actions">
+              <button
+                className="primary-btn small"
+                onClick={() => onTryOn(it)}
+              >
+                Try this on
+              </button>
+              {it.outfit_image_url && (
+                <a
+                  className="ghost-btn small"
+                  href={fileUrl(it.outfit_image_url)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Full outfit
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const headline = results.length > 0 && results[0].source === 'wardrobe'
+    ? 'Similar items in your wardrobe'
+    : 'Similar looks from the corpus';
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Items like this</h2>
+          <h2>{headline}</h2>
           <button className="ghost-btn subtle" onClick={onClose}>Close</button>
         </div>
         <div className="modal-body">
@@ -35,22 +90,14 @@ function SimilarModal({ source, results, loading, error, onClose }) {
             {loading && <div className="empty-hint">Searching…</div>}
             {error && <div className="page-error">{error}</div>}
             {!loading && !error && results.length === 0 && (
-              <div className="empty-hint">No similar items in your wardrobe yet.</div>
+              <div className="empty-hint">
+                No matches found. (If the corpus index isn't built yet,
+                run <code>python scripts/build_library.py</code> and restart uvicorn.)
+              </div>
             )}
             {!loading && !error && results.length > 0 && (
               <div className="closet-grid wide">
-                {results.map((it) => (
-                  <div key={it.id} className="closet-card">
-                    <img src={fileUrl(it.image_url)} alt={it.name || it.category} />
-                    <div className="closet-card-info">
-                      <div className="closet-card-cat">{it.subcategory || it.category}</div>
-                      <div className="closet-card-name">{it.name || 'Unnamed'}</div>
-                      <div className="muted small">
-                        match {Math.round((it.similarity || 0) * 100)}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {results.map(renderCard)}
               </div>
             )}
           </div>
@@ -129,6 +176,29 @@ function Wardrobe() {
     setSimilarError('');
   };
 
+  // User clicked "Try this on" inside the Find Similar modal. Pre-fill the
+  // try-on slot for the library item's category with its image URL, leave
+  // the opposite slot for them to pick from their own wardrobe.
+  const handleTryOnLibrary = (libItem) => {
+    const tryonState = {};
+    const url = libItem.image_url || libItem.outfit_image_url;
+    if (!url) return;
+    if (libItem.category === 'top') {
+      tryonState.topImageUrl = url;
+      tryonState.topLabel = libItem.label || 'Library top';
+    } else if (libItem.category === 'bottom') {
+      tryonState.bottomImageUrl = url;
+      tryonState.bottomLabel = libItem.label || 'Library bottom';
+    } else {
+      // FAISS only matches within category; for shoes/outerwear/accessory
+      // we still send to try-on with a default slot, but the user will
+      // need to pick the actual top/bottom from their wardrobe.
+      return;
+    }
+    closeSimilar();
+    navigate('/tryon', { state: tryonState });
+  };
+
   return (
     <div className="page wardrobe-page">
       <div className="page-header">
@@ -183,6 +253,7 @@ function Wardrobe() {
         loading={similarLoading}
         error={similarError}
         onClose={closeSimilar}
+        onTryOn={handleTryOnLibrary}
       />
     </div>
   );

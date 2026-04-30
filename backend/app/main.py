@@ -27,9 +27,13 @@ app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
 
 # Outfit-library reference images live next to the cache, served read-only.
 # Built by scripts/build_library.py — directory may not exist yet, hence the mkdir.
-_library_images = Path(__file__).resolve().parents[2] / "data" / "library_cache" / "images"
+_library_root = Path(__file__).resolve().parents[2] / "data" / "library_cache"
+_library_images = _library_root / "images"
+_library_crops = _library_root / "crops"
 _library_images.mkdir(parents=True, exist_ok=True)
+_library_crops.mkdir(parents=True, exist_ok=True)
 app.mount("/library", StaticFiles(directory=str(_library_images)), name="library")
+app.mount("/crops", StaticFiles(directory=str(_library_crops)), name="crops")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(wardrobe.router, prefix="/api")
