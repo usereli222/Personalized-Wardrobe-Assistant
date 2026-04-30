@@ -1,20 +1,30 @@
-import { api, setToken, clearToken, getToken } from './api';
+import { api } from './api';
+import {
+  fbSignIn,
+  fbSignUp,
+  fbSignOut,
+  fbCurrentUser,
+  fbOnAuthChanged,
+} from './firebase';
 
-export const signup = async ({ username, email, password }) => {
-  const { token } = await api.postJson('/auth/signup', { username, email, password });
-  setToken(token);
-  return token;
+export const signup = async ({ email, password, displayName }) => {
+  const user = await fbSignUp({ email, password, displayName });
+  // Fire-and-forget: tell the backend to upsert the User row + record a login.
+  await api.postJson('/auth/login-event', {}).catch(() => {});
+  return user;
 };
 
-export const login = async ({ username, password }) => {
-  const { token } = await api.postJson('/auth/login', { username, password });
-  setToken(token);
-  return token;
+export const login = async ({ email, password }) => {
+  const user = await fbSignIn({ email, password });
+  await api.postJson('/auth/login-event', {}).catch(() => {});
+  return user;
 };
 
-export const logout = () => clearToken();
+export const logout = () => fbSignOut();
 
-export const isAuthed = () => !!getToken();
+export const isAuthed = () => !!fbCurrentUser();
+
+export const onAuthChanged = (cb) => fbOnAuthChanged(cb);
 
 export const fetchMe = () => api.get('/auth/me');
 
