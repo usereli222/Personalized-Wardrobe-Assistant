@@ -1,17 +1,17 @@
 import React from 'react';
 import { NavLink, useNavigate, Outlet, Navigate } from 'react-router-dom';
-import { isAuthed, logout } from '../services/auth';
+import { logout } from '../services/auth';
 
-export function RequireAuth({ children }) {
-  if (!isAuthed()) return <Navigate to="/login" replace />;
+export function RequireAuth({ user, children }) {
+  if (!user) return <Navigate to="/login" replace />;
   return children;
 }
 
 function AppShell({ username }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login', { replace: true });
   };
 

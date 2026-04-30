@@ -1,21 +1,53 @@
 """
-Auth dependency — STUB.
+Auth dependency.
 
-Resolves the current user from the `Authorization: Bearer <token>` header.
-The stub treats the token as the username directly; mentees should swap in
-real JWT decoding in `app/core/security.py` without changing this file.
+Verifies a Firebase ID token from the `Authorization: Bearer <token>` header,
+upserts the corresponding User row in Postgres, and returns a dict that the
+existing routers can consume (keyed off `username` for the in-memory store).
 """
 
 from __future__ import annotations
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from firebase_admin import auth as fb_auth
+from sqlalchemy.orm import Session
 
 from app.core import store
-from app.core.security import decode_token
+from app.core.database import SessionLocal
+from app.core.firebase import verify_id_token
+from app.models.user import User
 
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _upsert_user(db: Session, decoded: dict) -> User:
+    uid = decoded["uid"]
+    user = db.query(User).filter(User.firebase_uid == uid).first()
+    if user is not None:
+        return user
+
+    user = User(
+        firebase_uid=uid,
+        email=decoded.get("email") or f"{uid}@firebase.local",
+        name=decoded.get("name"),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def _user_to_dict(user: User) -> dict:
+    return {
+        "id": user.id,
+        "username": user.firebase_uid,
+        "email": user.email,
+        "name": user.name,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "body_photo_path": store.get_body_photo_path(user.firebase_uid),
+    }
 
 
 def get_current_user(
@@ -28,18 +60,19 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    username = decode_token(creds.credentials)
-    if not username:
+    try:
+        decoded = verify_id_token(creds.credentials)
+    except (fb_auth.InvalidIdTokenError, fb_auth.ExpiredIdTokenError, fb_auth.RevokedIdTokenError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = store.get_user(username)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
-    return user
+    db = SessionLocal()
+    try:
+        user = _upsert_user(db, decoded)
+        store.ensure_user_buckets(user.firebase_uid)
+        return _user_to_dict(user)
+    finally:
+        db.close()

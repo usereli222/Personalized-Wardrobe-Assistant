@@ -1,45 +1,30 @@
 """
-Auth routes — STUB persistence.
+Auth routes.
 
-User accounts and login history live in `app/core/store.py` (in-memory).
-Mentees: swap the `store` calls for real DB queries against the SQLAlchemy
-models in `app/models/user.py`. The route shapes here are the contract —
-keep them stable so the frontend doesn't have to change.
+Firebase handles sign-up and sign-in client-side. The backend just
+verifies the resulting ID token via `get_current_user` and exposes:
+
+- POST /auth/login-event   — record that the client just signed in
+- GET  /auth/me            — return the authed user's profile
+- GET  /auth/login-history — recent login events for the authed user
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, Request, status
+from pydantic import BaseModel
 
 from app.core import store
 from app.core.auth import get_current_user
-from app.core.security import create_token, hash_password, verify_password
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-class SignupIn(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-
-
-class LoginIn(BaseModel):
-    username: str
-    password: str
-
-
-class TokenOut(BaseModel):
-    token: str
-    username: str
-
-
 class UserOut(BaseModel):
     username: str
     email: str
-    created_at: str
+    created_at: str | None
     has_body_photo: bool
 
 
@@ -58,36 +43,13 @@ def _user_out(user: dict) -> UserOut:
     )
 
 
-@router.post("/signup", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
-def signup(payload: SignupIn, request: Request):
-    if store.get_user(payload.username):
-        raise HTTPException(status_code=409, detail="Username already taken")
-
-    store.create_user(
-        username=payload.username,
-        email=payload.email,
-        password_hash=hash_password(payload.password),
-    )
+@router.post("/login-event", status_code=status.HTTP_204_NO_CONTENT)
+def login_event(request: Request, current_user: dict = Depends(get_current_user)):
     store.record_login(
-        payload.username,
+        current_user["username"],
         ip=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
     )
-    return TokenOut(token=create_token(payload.username), username=payload.username)
-
-
-@router.post("/login", response_model=TokenOut)
-def login(payload: LoginIn, request: Request):
-    user = store.get_user(payload.username)
-    if not user or not verify_password(payload.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    store.record_login(
-        payload.username,
-        ip=request.client.host if request.client else None,
-        user_agent=request.headers.get("user-agent"),
-    )
-    return TokenOut(token=create_token(payload.username), username=payload.username)
 
 
 @router.get("/me", response_model=UserOut)
