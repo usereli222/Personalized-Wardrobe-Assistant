@@ -1,9 +1,14 @@
 import io
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image
 from google import genai
 
+from app.core import store
+from app.core.auth import get_current_user
 from app.core.config import settings
 
 router = APIRouter(prefix="/tryon", tags=["tryon"])
@@ -98,3 +103,62 @@ async def generate_tryon(
         502,
         f"Gemini returned no image. {blocked or 'The model may have refused the request.'}",
     )
+
+
+@router.post("/saved")
+async def save_outfit(
+    image: UploadFile = File(...),
+    top_image_url: str | None = Form(None),
+    bottom_image_url: str | None = Form(None),
+    body_photo_url: str | None = Form(None),
+    top_name: str | None = Form(None),
+    bottom_name: str | None = Form(None),
+    name: str | None = Form(None),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Persist a try-on result the user just generated. The frontend re-uploads
+    the rendered image bytes here along with references to the source
+    garments / body photo so the saved-outfits view can display thumbnails.
+    """
+    upload_dir = Path(settings.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    ext = Path(image.filename or "").suffix.lower() or ".png"
+    if ext not in {".png", ".jpg", ".jpeg", ".webp"}:
+        ext = ".png"
+    filename = f"tryon_{uuid.uuid4()}{ext}"
+    (upload_dir / filename).write_bytes(image.file.read())
+
+    saved = store.add_saved_outfit(
+        current_user["username"],
+        {
+            "name": name,
+            "image_path": filename,
+            "image_url": f"/uploads/{filename}",
+            "top_image_url": top_image_url,
+            "bottom_image_url": bottom_image_url,
+            "body_photo_url": body_photo_url,
+            "top_name": top_name,
+            "bottom_name": bottom_name,
+        },
+    )
+    return saved
+
+
+@router.get("/saved")
+def list_saved_outfits(current_user: dict = Depends(get_current_user)):
+    return store.list_saved_outfits(current_user["username"])
+
+
+@router.delete("/saved/{outfit_id}")
+def delete_saved_outfit(outfit_id: str, current_user: dict = Depends(get_current_user)):
+    saved = store.get_saved_outfit(current_user["username"], outfit_id)
+    if not saved:
+        raise HTTPException(404, "Saved outfit not found")
+
+    file_path = Path(settings.UPLOAD_DIR) / saved["image_path"]
+    if file_path.exists():
+        file_path.unlink()
+
+    store.delete_saved_outfit(current_user["username"], outfit_id)
+    return {"detail": "deleted"}

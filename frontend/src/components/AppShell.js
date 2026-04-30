@@ -27,6 +27,7 @@ function AppShell({ username }) {
           <NavLink to="/wardrobe" className={tab}>Wardrobe</NavLink>
           <NavLink to="/outfits" className={tab}>Outfits</NavLink>
           <NavLink to="/tryon" className={tab}>Try-On</NavLink>
+          <NavLink to="/saved" className={tab}>Saved</NavLink>
         </nav>
         <div className="app-header-right">
           {username && <span className="app-user">{username}</span>}

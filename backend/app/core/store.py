@@ -23,6 +23,9 @@ _login_history: dict[str, list[dict[str, Any]]] = {}
 # uid -> list[wardrobe_item dict]
 _wardrobe: dict[str, list[dict[str, Any]]] = {}
 
+# uid -> list[saved_outfit dict]  (try-on results the user explicitly saved)
+_saved_outfits: dict[str, list[dict[str, Any]]] = {}
+
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -82,5 +85,35 @@ def delete_wardrobe_item(username: str, item_id: str) -> bool:
     for i, item in enumerate(items):
         if item["id"] == item_id:
             items.pop(i)
+            return True
+    return False
+
+
+# ---- saved try-on outfits -------------------------------------------------
+
+def add_saved_outfit(username: str, outfit: dict[str, Any]) -> dict[str, Any]:
+    outfit.setdefault("id", str(uuid4()))
+    outfit.setdefault("created_at", now())
+    _saved_outfits.setdefault(username, []).append(outfit)
+    return outfit
+
+
+def list_saved_outfits(username: str) -> list[dict[str, Any]]:
+    # Newest first.
+    return list(reversed(_saved_outfits.get(username, [])))
+
+
+def get_saved_outfit(username: str, outfit_id: str) -> dict[str, Any] | None:
+    for outfit in _saved_outfits.get(username, []):
+        if outfit["id"] == outfit_id:
+            return outfit
+    return None
+
+
+def delete_saved_outfit(username: str, outfit_id: str) -> bool:
+    outfits = _saved_outfits.get(username, [])
+    for i, outfit in enumerate(outfits):
+        if outfit["id"] == outfit_id:
+            outfits.pop(i)
             return True
     return False

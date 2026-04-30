@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { fileUrl } from '../services/api';
 import { listWardrobeItems, fetchBodyPhoto, uploadBodyPhoto } from '../services/wardrobeApi';
-import { generateTryOn } from '../services/tryon';
+import { generateTryOn, saveTryOnOutfit } from '../services/tryon';
 
 function MagicMirror({ status, bodyPhotoUrl, resultUrl, error, onUploadBody, bodyBusy }) {
   let body;
@@ -99,7 +99,10 @@ function TryOn() {
   const [conjuring, setConjuring] = useState(false);
   const [error, setError] = useState(null);
   const [bodyBusy, setBodyBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
   const lastUrlRef = useRef(null);
+  const lastBlobRef = useRef(null);
   const bodyFileRef = useRef(null);
 
   useEffect(() => {
@@ -174,21 +177,45 @@ function TryOn() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setError(null);
+    setSaveStatus(null);
     setConjuring(true);
     try {
-      const url = await generateTryOn({
+      const { url, blob } = await generateTryOn({
         bodyPhotoUrl,
         topImageUrl: selectedTop.image_url,
         bottomImageUrl: selectedBottom.image_url,
       });
       if (lastUrlRef.current) URL.revokeObjectURL(lastUrlRef.current);
       lastUrlRef.current = url;
+      lastBlobRef.current = blob;
       setResultUrl(url);
     } catch (err) {
       setError(err.message || 'Try-on failed.');
       setResultUrl(null);
+      lastBlobRef.current = null;
     } finally {
       setConjuring(false);
+    }
+  };
+
+  const handleSaveLook = async () => {
+    if (!resultUrl || !lastBlobRef.current || saveBusy) return;
+    setSaveBusy(true);
+    setSaveStatus(null);
+    try {
+      await saveTryOnOutfit({
+        blob: lastBlobRef.current,
+        topImageUrl: selectedTop?.image_url,
+        bottomImageUrl: selectedBottom?.image_url,
+        bodyPhotoUrl,
+        topName: selectedTop?.name,
+        bottomName: selectedBottom?.name,
+      });
+      setSaveStatus('saved');
+    } catch (err) {
+      setSaveStatus(`error:${err.message || 'Could not save.'}`);
+    } finally {
+      setSaveBusy(false);
     }
   };
 
@@ -270,6 +297,23 @@ function TryOn() {
         <button className="primary-btn" disabled={!canSubmit} onClick={handleSubmit}>
           {conjuring ? 'Conjuring…' : 'Try It On'}
         </button>
+        {resultUrl && !conjuring && (
+          <button
+            className="ghost-btn"
+            onClick={handleSaveLook}
+            disabled={saveBusy || saveStatus === 'saved'}
+          >
+            {saveBusy ? 'Saving…' : saveStatus === 'saved' ? 'Saved ✓' : 'Save look'}
+          </button>
+        )}
+        {saveStatus === 'saved' && (
+          <button className="ghost-btn small" onClick={() => navigate('/saved')}>
+            View saved →
+          </button>
+        )}
+        {saveStatus && saveStatus.startsWith('error:') && (
+          <span className="footer-hint">{saveStatus.slice('error:'.length)}</span>
+        )}
         {bodyPhotoUrl && (
           <label className="ghost-btn small upload-trigger">
             {bodyBusy ? 'Uploading…' : 'Change photo'}

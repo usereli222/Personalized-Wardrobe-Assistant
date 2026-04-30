@@ -7,6 +7,7 @@ import Onboarding from './pages/Onboarding';
 import Wardrobe from './pages/Wardrobe';
 import Outfits from './pages/Outfits';
 import TryOn from './pages/TryOn';
+import Saved from './pages/Saved';
 import AppShell, { RequireAuth } from './components/AppShell';
 import { onAuthChanged } from './services/auth';
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="/wardrobe" element={<Wardrobe />} />
           <Route path="/outfits" element={<Outfits />} />
           <Route path="/tryon" element={<TryOn />} />
+          <Route path="/saved" element={<Saved />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
