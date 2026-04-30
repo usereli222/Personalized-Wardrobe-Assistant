@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { fileUrl } from '../services/api';
-import { listWardrobeItems, fetchBodyPhoto } from '../services/wardrobeApi';
+import { listWardrobeItems, fetchBodyPhoto, uploadBodyPhoto } from '../services/wardrobeApi';
 import { generateTryOn } from '../services/tryon';
 
-function MagicMirror({ status, bodyPhotoUrl, resultUrl, error }) {
+function MagicMirror({ status, bodyPhotoUrl, resultUrl, error, onUploadBody, bodyBusy }) {
   let body;
   if (status === 'conjuring') {
     body = (
@@ -30,6 +30,16 @@ function MagicMirror({ status, bodyPhotoUrl, resultUrl, error }) {
       <div className="mirror-empty">
         <div className="mirror-empty-glyph">✦</div>
         <div className="mirror-empty-text">Upload a full-body photo to awaken the mirror.</div>
+        <label className="primary-btn small upload-trigger" style={{ marginTop: '12px' }}>
+          {bodyBusy ? 'Uploading…' : 'Upload photo'}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onUploadBody}
+            style={{ display: 'none' }}
+            disabled={bodyBusy}
+          />
+        </label>
       </div>
     );
   } else {
@@ -88,7 +98,9 @@ function TryOn() {
   const [resultUrl, setResultUrl] = useState(null);
   const [conjuring, setConjuring] = useState(false);
   const [error, setError] = useState(null);
+  const [bodyBusy, setBodyBusy] = useState(false);
   const lastUrlRef = useRef(null);
+  const bodyFileRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -125,6 +137,26 @@ function TryOn() {
   const selectedBottom = externalBottomUrl
     ? { id: '__external_bottom__', image_url: externalBottomUrl, name: externalBottomLabel || 'Library bottom', _external: true }
     : bottoms.find((b) => b.id === selectedBottomId);
+
+  const handleUploadBody = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    setBodyBusy(true);
+    try {
+      const { body_photo_url } = await uploadBodyPhoto(file);
+      setBodyPhotoUrl(body_photo_url);
+      // A new body photo invalidates any existing try-on result.
+      if (lastUrlRef.current) URL.revokeObjectURL(lastUrlRef.current);
+      lastUrlRef.current = null;
+      setResultUrl(null);
+    } catch (err) {
+      setError(err.message || 'Could not upload photo.');
+    } finally {
+      setBodyBusy(false);
+      if (bodyFileRef.current) bodyFileRef.current.value = '';
+    }
+  };
 
   const handlePickTop = (id) => {
     setExternalTopUrl(null);
@@ -183,6 +215,8 @@ function TryOn() {
             bodyPhotoUrl={bodyPhotoUrl}
             resultUrl={resultUrl}
             error={error}
+            onUploadBody={handleUploadBody}
+            bodyBusy={bodyBusy}
           />
           <div className="mannequin-caption">
             {selectedTop || selectedBottom ? (
@@ -236,7 +270,19 @@ function TryOn() {
         <button className="primary-btn" disabled={!canSubmit} onClick={handleSubmit}>
           {conjuring ? 'Conjuring…' : 'Try It On'}
         </button>
-        {!bodyPhotoUrl && <span className="footer-hint">↳ Add your photo in <em>Wardrobe</em> first.</span>}
+        {bodyPhotoUrl && (
+          <label className="ghost-btn small upload-trigger">
+            {bodyBusy ? 'Uploading…' : 'Change photo'}
+            <input
+              type="file"
+              accept="image/*"
+              ref={bodyFileRef}
+              onChange={handleUploadBody}
+              style={{ display: 'none' }}
+              disabled={bodyBusy}
+            />
+          </label>
+        )}
       </footer>
     </div>
   );

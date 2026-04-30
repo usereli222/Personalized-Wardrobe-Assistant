@@ -113,6 +113,7 @@ function Wardrobe() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef(null);
+  const [pendingFile, setPendingFile] = useState(null);
 
   const [similarSource, setSimilarSource] = useState(null);
   const [similarResults, setSimilarResults] = useState([]);
@@ -129,19 +130,35 @@ function Wardrobe() {
 
   useEffect(() => { refresh(); }, []);
 
-  const handleAdd = async (e) => {
+  const resetFileInput = () => {
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const handleAdd = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setError('');
+    setPendingFile(file);
+  };
+
+  const handleCancelAdd = () => {
+    setPendingFile(null);
+    resetFileInput();
+  };
+
+  const handleConfirmCategory = async (category) => {
+    if (!pendingFile) return;
     setBusy(true);
     setError('');
     try {
-      await uploadWardrobeItem({ file });
+      await uploadWardrobeItem({ file: pendingFile, category });
       await refresh();
+      setPendingFile(null);
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
-      if (fileRef.current) fileRef.current.value = '';
+      resetFileInput();
     }
   };
 
@@ -255,6 +272,41 @@ function Wardrobe() {
         onClose={closeSimilar}
         onTryOn={handleTryOnLibrary}
       />
+
+      {pendingFile && (
+        <div className="modal-backdrop" onClick={busy ? undefined : handleCancelAdd}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>What kind of item is this?</h2>
+              <button
+                className="ghost-btn subtle"
+                onClick={handleCancelAdd}
+                disabled={busy}
+              >
+                Cancel
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="muted small" style={{ marginBottom: '12px' }}>
+                Pick a category for <strong>{pendingFile.name}</strong>.
+              </div>
+              <div className="page-actions">
+                {SECTIONS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    className="primary-btn"
+                    onClick={() => handleConfirmCategory(key)}
+                    disabled={busy}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {busy && <div className="empty-hint" style={{ marginTop: '12px' }}>Uploading…</div>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1235,6 +1235,8 @@ a {
 .tryon-page .magic-mirror {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  align-self: center;
   display: flex;
   align-items: center;
   justify-content: center;

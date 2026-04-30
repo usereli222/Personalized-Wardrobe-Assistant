@@ -10,29 +10,40 @@ router = APIRouter(prefix="/tryon", tags=["tryon"])
 
 
 _PROMPT = (
-    "You are a virtual try-on assistant. The first image is a full-body photo of a "
-    "person. The second image is a top (shirt) and the third image is bottoms "
-    "(pants/shorts/skirt). Generate a single new full-body photograph of the SAME "
-    "person wearing both garments. "
-    "Strict requirements: "
-    "1) Preserve the person's face, skin tone, hair, body proportions, pose, and the "
-    "original background exactly as in the first image. Do NOT change identity. "
-    "2) Render the garments realistically with natural fabric folds, draping, and "
-    "shadows that match the lighting of the original photo. "
-    "3) Replace the clothing the person is currently wearing with the provided "
-    "garments. Do not add extra clothing items. "
-    "4) Match the silhouette, color, pattern, and material of each provided garment "
-    "as faithfully as possible. "
-    "5) Output a single photorealistic image at the same aspect ratio as the body "
-    "photo. No text, watermarks, or borders."
+    "Replace the clothing on the person in image 1 with the top shown in image 2 "
+    "and the bottom shown in image 3. The output must clearly show the person "
+    "wearing the new top and bottom — this is the primary goal.\n\n"
+    "Image 1: a full-body photo of the person whose outfit you are changing.\n"
+    "Image 2: an isolated top garment (shirt/blouse/sweater) on a white "
+    "background.\n"
+    "Image 3: an isolated bottom garment (pants/shorts/skirt) on a white "
+    "background.\n\n"
+    "Requirements:\n"
+    "- The person in the output must be wearing the exact top from image 2 and "
+    "the exact bottom from image 3. Match their silhouette, color, pattern, and "
+    "material faithfully. Do not keep any of the person's original clothing.\n"
+    "- Keep the person's face, skin tone, hair, body proportions, pose, and the "
+    "original background from image 1. Do not change their identity.\n"
+    "- Render the new garments with realistic fabric folds, draping, and shadows "
+    "that match the lighting of image 1.\n"
+    "- Output a single photorealistic image at the same aspect ratio as image 1. "
+    "No text, watermarks, or borders."
 )
 
 
 def _open_image(upload: UploadFile, label: str) -> Image.Image:
+    """Read an uploaded image and return RGB. RGBA inputs (e.g. SAM-cropped
+    garments with transparent backgrounds) are composited onto white rather
+    than flattened to black, since Gemini interprets isolated garments more
+    reliably on a white field."""
     try:
         data = upload.file.read()
         img = Image.open(io.BytesIO(data))
         img.load()
+        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+            rgba = img.convert("RGBA")
+            white = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+            return Image.alpha_composite(white, rgba).convert("RGB")
         return img.convert("RGB")
     except Exception as exc:
         raise HTTPException(400, f"Could not read {label} image: {exc}")
