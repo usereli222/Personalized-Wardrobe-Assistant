@@ -59,6 +59,25 @@ function Outfits() {
                   <div className="outfit-thumb-label">{o.bottom.name || o.bottom.subcategory || 'Bottom'}</div>
                 </div>
               </div>
+
+              {o.inspired_by_image && (
+                <div className="outfit-inspiration">
+                  <img
+                    src={fileUrl(`/library/${o.inspired_by_image}`)}
+                    alt={`Inspired by ${o.inspired_by_outfit_id}`}
+                    className="outfit-inspiration-thumb"
+                  />
+                  <div className="outfit-inspiration-text">
+                    <div className="muted small">Inspired by</div>
+                    <div className="outfit-inspiration-id">{o.inspired_by_outfit_id}</div>
+                  </div>
+                </div>
+              )}
+
+              {o.rationale && (
+                <div className="outfit-rationale muted small">{o.rationale}</div>
+              )}
+
               <div className="outfit-meta">
                 <div className="outfit-score">match {Math.round((o.score || 0) * 100)}%</div>
                 <button className="primary-btn small" onClick={() => handleTryOn(o)}>Try this on</button>

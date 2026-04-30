@@ -1359,3 +1359,182 @@ a {
 .demo-button:hover:not(:disabled) {
   background: rgba(255, 210, 154, 0.12);
 }
+
+/* ---------- "Find similar" modal (Wardrobe page) ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal-card {
+  background: var(--panel-bg, #14141c);
+  border: 1px solid rgba(255, 210, 154, 0.18);
+  border-radius: 12px;
+  max-width: 1000px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 210, 154, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-body {
+  display: grid;
+  grid-template-columns: 220px 1px 1fr;
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-source img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.modal-divider {
+  background: rgba(255, 210, 154, 0.1);
+}
+
+.modal-results {
+  min-width: 0;
+}
+
+.closet-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.ghost-btn.small,
+.primary-btn.small {
+  font-size: 0.78rem;
+  padding: 4px 10px;
+}
+
+/* ---------- Outfit "inspired by" + rationale ---------- */
+
+.outfit-inspiration {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 210, 154, 0.08);
+  margin-top: 8px;
+}
+
+.outfit-inspiration-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 210, 154, 0.15);
+}
+
+.outfit-inspiration-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.outfit-inspiration-id {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outfit-rationale {
+  padding: 4px 0 8px;
+  font-style: italic;
+}
+
+/* ---------- Try-on selected-item thumbnails ---------- */
+
+.selected-thumbs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.selected-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(255, 210, 154, 0.06);
+  border: 1px solid rgba(255, 210, 154, 0.18);
+  border-radius: 8px;
+  min-width: 110px;
+}
+
+.selected-thumb.placeholder {
+  border-style: dashed;
+  background: transparent;
+}
+
+.selected-thumb img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.selected-thumb-label {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selected-thumb-empty {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.badge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  background: rgba(255, 210, 154, 0.18);
+  border-radius: 999px;
+  color: var(--gold-soft, #ffd29a);
+}

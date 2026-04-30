@@ -12,6 +12,12 @@ export const uploadWardrobeItem = ({ file, name, category }) => {
 
 export const deleteWardrobeItem = (id) => api.del(`/wardrobe/items/${id}`);
 
+export const fetchSimilarItems = (id, k = 8) =>
+  api.get(`/wardrobe/items/${id}/similar?k=${k}`);
+
+export const warmModels = () =>
+  api.postJson('/health/warm', {});
+
 export const uploadWardrobeArchive = (zipFile) => {
   const form = new FormData();
   form.append('archive', zipFile);

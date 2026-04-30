@@ -70,6 +70,28 @@ class ClothingEmbedder:
         
         return img.convert("RGB")
 
+    def _encode_image(self, pixel_values):
+        """Run the CLIP vision encoder + visual projection manually.
+
+        We bypass `model.get_image_features` because its return shape became
+        unstable in transformers >= 4.51 (sometimes a tensor, sometimes a
+        ModelOutput wrapper, sometimes pre-projected, sometimes not). Going
+        straight through `vision_model` and `visual_projection` is well-
+        defined across versions and gives us a clean (B, 512) tensor.
+        """
+        vision_out = self.model.vision_model(pixel_values=pixel_values)
+        pooled = vision_out.pooler_output  # (B, hidden_dim) raw ViT CLS
+        return self.model.visual_projection(pooled)  # (B, 512)
+
+    def _encode_text(self, input_ids, attention_mask=None):
+        """Run the CLIP text encoder + text projection manually."""
+        kwargs = {"input_ids": input_ids}
+        if attention_mask is not None:
+            kwargs["attention_mask"] = attention_mask
+        text_out = self.model.text_model(**kwargs)
+        pooled = text_out.pooler_output  # (B, hidden_dim)
+        return self.model.text_projection(pooled)  # (B, 512)
+
     @torch.no_grad()
     def embed(self, image: Union[str, Path, Image.Image, np.ndarray]) -> np.ndarray:
         """
@@ -88,13 +110,32 @@ class ClothingEmbedder:
         # Move to correct device
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        # Forward pass returning normalized embeddings
-        outputs = self.model.get_image_features(**inputs)
-        
-        # Explicitly enforce L2 normalization (length = 1)
-        embeddings = F.normalize(outputs, p=2, dim=-1)
-
+        features = self._encode_image(inputs["pixel_values"])
+        embeddings = F.normalize(features, p=2, dim=-1)
         return embeddings.cpu().numpy()[0]
+
+    @torch.no_grad()
+    def embed_text(self, prompts: list[str]) -> np.ndarray:
+        """
+        Embed a list of text prompts in the same FashionCLIP space as images.
+
+        Used by the zero-shot categorizer: dot-product an image embedding
+        against per-category prompt embeddings to pick the best label.
+
+        Returns:
+            L2-normalized embeddings as 2D numpy array, shape (len(prompts), 512)
+        """
+        if not prompts:
+            return np.array([])
+
+        inputs = self.processor(text=prompts, return_tensors="pt", padding=True)
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        features = self._encode_text(
+            inputs["input_ids"], inputs.get("attention_mask")
+        )
+        embeddings = F.normalize(features, p=2, dim=-1)
+        return embeddings.cpu().numpy()
 
     @torch.no_grad()
     def embed_batch(
@@ -125,9 +166,9 @@ class ClothingEmbedder:
             inputs = self.processor(images=pil_batch, return_tensors="pt")
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-            outputs = self.model.get_image_features(**inputs)
-            embeddings = F.normalize(outputs, p=2, dim=-1)
-            
+            features = self._encode_image(inputs["pixel_values"])
+            embeddings = F.normalize(features, p=2, dim=-1)
+
             all_embeddings.append(embeddings.cpu().numpy())
 
         return np.vstack(all_embeddings)
