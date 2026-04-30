@@ -5,15 +5,24 @@ pydantic>=2.7.4
 pydantic-settings>=2.3.4
 pydantic[email]>=2.7.4
 pillow>=11.0.0
-numpy>=2.0.0
+numpy>=1.24.0
 scikit-learn>=1.5.0
 google-genai>=0.7.0
 python-dotenv>=1.0.1
 pytest>=8.2.2
 pytest-asyncio>=0.23.7
 
-# Mentees: add what you need below for your implementation, e.g.
-#   sqlalchemy + alembic + psycopg2-binary (or aiosqlite) for the DB
-#   passlib[bcrypt] + python-jose[cryptography] for real auth
-#   torch + transformers for FashionCLIP
-#   rembg + onnxruntime for background removal in color extraction
+# Local ML pipeline (FashionCLIP categorizer + Grounded SAM segmentation +
+# FAISS outfit retrieval). Lazy-loaded inside the FastAPI process.
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.40.0
+faiss-cpu>=1.7.4
+gdown>=5.1.0
+opencv-python>=4.8.0
+scikit-image>=0.21.0
+
+# DB + auth (used once Setup-Task-3 lands; safe to install ahead of time)
+sqlalchemy>=2.0
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0

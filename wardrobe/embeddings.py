@@ -97,6 +97,27 @@ class ClothingEmbedder:
         return embeddings.cpu().numpy()[0]
 
     @torch.no_grad()
+    def embed_text(self, prompts: list[str]) -> np.ndarray:
+        """
+        Embed a list of text prompts in the same FashionCLIP space as images.
+
+        Used by the zero-shot categorizer: dot-product an image embedding
+        against per-category prompt embeddings to pick the best label.
+
+        Returns:
+            L2-normalized embeddings as 2D numpy array, shape (len(prompts), 512)
+        """
+        if not prompts:
+            return np.array([])
+
+        inputs = self.processor(text=prompts, return_tensors="pt", padding=True)
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        outputs = self.model.get_text_features(**inputs)
+        embeddings = F.normalize(outputs, p=2, dim=-1)
+        return embeddings.cpu().numpy()
+
+    @torch.no_grad()
     def embed_batch(
         self,
         images: list[Union[str, Path, Image.Image, np.ndarray]],

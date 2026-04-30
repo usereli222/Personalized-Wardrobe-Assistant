@@ -5,6 +5,7 @@ import {
   listWardrobeItems,
   uploadWardrobeItem,
   deleteWardrobeItem,
+  fetchSimilarItems,
 } from '../services/wardrobeApi';
 
 const SECTIONS = [
@@ -15,12 +16,61 @@ const SECTIONS = [
   { key: 'accessory', label: 'Accessories' },
 ];
 
+function SimilarModal({ source, results, loading, error, onClose }) {
+  if (!source) return null;
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Items like this</h2>
+          <button className="ghost-btn subtle" onClick={onClose}>Close</button>
+        </div>
+        <div className="modal-body">
+          <div className="modal-source">
+            <img src={fileUrl(source.image_url)} alt={source.name || source.category} />
+            <div className="muted small">{source.subcategory || source.category}</div>
+          </div>
+          <div className="modal-divider" />
+          <div className="modal-results">
+            {loading && <div className="empty-hint">Searching…</div>}
+            {error && <div className="page-error">{error}</div>}
+            {!loading && !error && results.length === 0 && (
+              <div className="empty-hint">No similar items in your wardrobe yet.</div>
+            )}
+            {!loading && !error && results.length > 0 && (
+              <div className="closet-grid wide">
+                {results.map((it) => (
+                  <div key={it.id} className="closet-card">
+                    <img src={fileUrl(it.image_url)} alt={it.name || it.category} />
+                    <div className="closet-card-info">
+                      <div className="closet-card-cat">{it.subcategory || it.category}</div>
+                      <div className="closet-card-name">{it.name || 'Unnamed'}</div>
+                      <div className="muted small">
+                        match {Math.round((it.similarity || 0) * 100)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Wardrobe() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef(null);
+
+  const [similarSource, setSimilarSource] = useState(null);
+  const [similarResults, setSimilarResults] = useState([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState('');
 
   const refresh = async () => {
     try {
@@ -58,6 +108,27 @@ function Wardrobe() {
     }
   };
 
+  const handleFindSimilar = async (item) => {
+    setSimilarSource(item);
+    setSimilarResults([]);
+    setSimilarError('');
+    setSimilarLoading(true);
+    try {
+      const results = await fetchSimilarItems(item.id, 8);
+      setSimilarResults(results);
+    } catch (err) {
+      setSimilarError(err.message || 'Could not find similar items.');
+    } finally {
+      setSimilarLoading(false);
+    }
+  };
+
+  const closeSimilar = () => {
+    setSimilarSource(null);
+    setSimilarResults([]);
+    setSimilarError('');
+  };
+
   return (
     <div className="page wardrobe-page">
       <div className="page-header">
@@ -92,7 +163,10 @@ function Wardrobe() {
                       <div className="closet-card-info">
                         <div className="closet-card-cat">{it.subcategory || it.category}</div>
                         <div className="closet-card-name">{it.name || 'Unnamed'}</div>
-                        <button className="ghost-btn danger" onClick={() => handleDelete(it.id)}>Remove</button>
+                        <div className="closet-card-actions">
+                          <button className="ghost-btn small" onClick={() => handleFindSimilar(it)}>Find similar</button>
+                          <button className="ghost-btn danger small" onClick={() => handleDelete(it.id)}>Remove</button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -102,6 +176,14 @@ function Wardrobe() {
           })}
         </div>
       )}
+
+      <SimilarModal
+        source={similarSource}
+        results={similarResults}
+        loading={similarLoading}
+        error={similarError}
+        onClose={closeSimilar}
+      />
     </div>
   );
 }

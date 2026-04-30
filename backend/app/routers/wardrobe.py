@@ -1,9 +1,14 @@
 """
-Wardrobe routes — STUB persistence.
+Wardrobe routes.
 
 Items live in `app/core/store.py` (in-memory) and uploaded image bytes go
-to `settings.UPLOAD_DIR` on disk. Mentees: swap to a real DB + a real
-file storage strategy (S3, local persistent volume, etc.).
+to `settings.UPLOAD_DIR` on disk. Each item carries a FashionCLIP embedding
+(np.ndarray, 512 floats) used by /items/{id}/similar and by the FAISS-based
+outfit suggester.
+
+The embedding is stored under the "embedding" key in the in-memory dict
+but stripped from the JSON response — it's a 512-float vector (not JSON-
+serializable as a numpy array, and not interesting to the frontend).
 """
 
 from __future__ import annotations
@@ -12,7 +17,9 @@ import io
 import uuid
 import zipfile
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
 
@@ -27,6 +34,11 @@ _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
 
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
+
+
+def _serialize_item(item: dict) -> dict:
+    """Strip the numpy embedding before returning over JSON."""
+    return {k: v for k, v in item.items() if k != "embedding"}
 
 
 def _save_upload(image: UploadFile) -> tuple[Path, str]:
@@ -47,15 +59,15 @@ async def upload_item(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Upload one clothing item. If `category` is omitted, the categorizer
-    stub is used. Mentees can wire the categorizer to a real model and
-    keep this route unchanged.
+    Upload one clothing item. The FashionCLIP categorizer assigns a category
+    AND produces a 512-dim embedding stored on the item for later similarity
+    search and outfit matching.
     """
     path, filename = _save_upload(image)
     img = Image.open(path)
 
+    predicted = categorize_item(img)
     if category is None:
-        predicted = categorize_item(img)
         category = predicted["category"]
         subcategory = predicted["subcategory"]
     else:
@@ -77,14 +89,15 @@ async def upload_item(
             "image_path": filename,
             "image_url": f"/uploads/{filename}",
             "dominant_colors": dominant_colors,
+            "embedding": predicted["embedding"],  # np.ndarray (512,) float32, L2-normed
         },
     )
-    return item
+    return _serialize_item(item)
 
 
 @router.get("/items")
 def list_items(current_user: dict = Depends(get_current_user)):
-    return store.list_wardrobe_items(current_user["username"])
+    return [_serialize_item(it) for it in store.list_wardrobe_items(current_user["username"])]
 
 
 @router.get("/items/{item_id}")
@@ -92,7 +105,45 @@ def get_item(item_id: str, current_user: dict = Depends(get_current_user)):
     item = store.get_wardrobe_item(current_user["username"], item_id)
     if not item:
         raise HTTPException(404, "Item not found")
-    return item
+    return _serialize_item(item)
+
+
+@router.get("/items/{item_id}/similar")
+def similar_items(
+    item_id: str,
+    k: int = 8,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Return up to `k` items from the user's wardrobe most similar to the
+    given item, ranked by FashionCLIP cosine similarity. Excludes the
+    source item from results.
+    """
+    src = store.get_wardrobe_item(current_user["username"], item_id)
+    if not src:
+        raise HTTPException(404, "Item not found")
+
+    src_emb = src.get("embedding")
+    if src_emb is None or not isinstance(src_emb, np.ndarray) or not src_emb.any():
+        raise HTTPException(409, "Source item has no embedding (re-upload it).")
+
+    others = [
+        it for it in store.list_wardrobe_items(current_user["username"])
+        if it["id"] != item_id
+        and isinstance(it.get("embedding"), np.ndarray)
+        and it["embedding"].any()
+    ]
+    if not others:
+        return []
+
+    matrix = np.stack([it["embedding"] for it in others])  # (M, 512)
+    scores = matrix @ src_emb  # (M,)
+    order = np.argsort(-scores)[:k]
+
+    return [
+        {**_serialize_item(others[int(i)]), "similarity": round(float(scores[int(i)]), 4)}
+        for i in order
+    ]
 
 
 @router.delete("/items/{item_id}")
@@ -110,8 +161,9 @@ def delete_item(item_id: str, current_user: dict = Depends(get_current_user)):
 
 
 def _ingest_image_bytes(data: bytes, original_name: str, username: str) -> dict | None:
-    """Save bytes to disk, classify, and add to the wardrobe store. Returns
-    the new item, or None if the bytes couldn't be parsed as an image."""
+    """Save bytes to disk, classify (category + embedding), and add to the
+    wardrobe store. Returns the new item, or None if the bytes couldn't be
+    parsed as an image."""
     try:
         img = Image.open(io.BytesIO(data))
         img.load()
@@ -141,6 +193,7 @@ def _ingest_image_bytes(data: bytes, original_name: str, username: str) -> dict 
             "image_path": filename,
             "image_url": f"/uploads/{filename}",
             "dominant_colors": dominant_colors,
+            "embedding": predicted["embedding"],
         },
     )
 
@@ -151,9 +204,10 @@ async def bulk_upload_items(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Upload a .zip of clothing images. Each entry is opened, classified
-    by the categorizer, and saved as a wardrobe item. Returns the list
-    of items created (skipping anything that wasn't a readable image).
+    Upload a .zip of clothing images. Each entry is opened, classified by
+    FashionCLIP, and saved as a wardrobe item with its embedding. Returns
+    the list of items created (skipping anything that wasn't a readable
+    image).
     """
     raw = await archive.read()
     try:
@@ -182,7 +236,7 @@ async def bulk_upload_items(
         if item is None:
             skipped.append(name)
         else:
-            created.append(item)
+            created.append(_serialize_item(item))
 
     return {"created": created, "skipped": skipped}
 
