@@ -1,12 +1,9 @@
-// Thin fetch wrapper. All API calls go through here so the bearer token
-// is attached uniformly and errors surface as Error objects.
+// Thin fetch wrapper. All API calls go through here so a fresh Firebase
+// ID token is attached uniformly and errors surface as Error objects.
+
+import { fbGetIdToken } from './firebase';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-const TOKEN_KEY = 'wardrobeToken';
-
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
-export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 export const apiUrl = (path) => `${API_BASE}${path}`;
 
@@ -23,6 +20,7 @@ async function handle(res) {
   if (res.ok) {
     const ct = res.headers.get('content-type') || '';
     if (ct.includes('application/json')) return res.json();
+    if (res.status === 204) return null;
     return res;
   }
   let detail = `HTTP ${res.status}`;
@@ -37,38 +35,39 @@ async function handle(res) {
   throw err;
 }
 
-function authHeaders(extra = {}) {
-  const token = getToken();
+async function authHeaders(extra = {}) {
+  const token = await fbGetIdToken();
   return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
 }
 
 export const api = {
-  get: (path) => fetch(apiUrl(path), { headers: authHeaders() }).then(handle),
+  get: async (path) =>
+    fetch(apiUrl(path), { headers: await authHeaders() }).then(handle),
 
-  postJson: (path, body) =>
+  postJson: async (path, body) =>
     fetch(apiUrl(path), {
       method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      headers: await authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     }).then(handle),
 
-  postForm: (path, formData) =>
+  postForm: async (path, formData) =>
     fetch(apiUrl(path), {
       method: 'POST',
-      headers: authHeaders(),
+      headers: await authHeaders(),
       body: formData,
     }).then(handle),
 
-  postFormBlob: (path, formData) =>
+  postFormBlob: async (path, formData) =>
     fetch(apiUrl(path), {
       method: 'POST',
-      headers: authHeaders(),
+      headers: await authHeaders(),
       body: formData,
     }).then(async (res) => {
       if (!res.ok) return handle(res);
       return res.blob();
     }),
 
-  del: (path) =>
-    fetch(apiUrl(path), { method: 'DELETE', headers: authHeaders() }).then(handle),
+  del: async (path) =>
+    fetch(apiUrl(path), { method: 'DELETE', headers: await authHeaders() }).then(handle),
 };

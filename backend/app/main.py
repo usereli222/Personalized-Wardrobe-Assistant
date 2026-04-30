@@ -4,7 +4,13 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.core.config import settings
+from app.core.database import Base, engine
+from app.core.firebase import init_firebase
+from app.models import User  # noqa: F401  (registers the users table on Base)
 from app.routers import auth, outfits, tryon, wardrobe
+
+init_firebase()
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Wardrobe AI",
